@@ -1,7 +1,7 @@
 [gd_scene load_steps=23 format=3 uid="uid://c3d6wmma86oth"]
 
 [ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="1_hjcgt"]
-[ext_resource type="Script" uid="uid://bbw7imwd5awqj" path="res://Assets/Scripts/SongSelectButton.gd" id="3_iwmk6"]
+[ext_resource type="Script" uid="uid://bbw7imwd5awqj" path="res://Assets/scripts/SongSelectButton.gd" id="3_iwmk6"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y0f0h"]
 bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
@@ -183,8 +183,6 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
-song = "Akala"
-artist = "Parokya Ni Edgar"
 
 [node name="Label" type="Label" parent="UI/ScrollContainer/VBoxContainer/Songselectbtn1"]
 layout_mode = 0
@@ -214,8 +212,6 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
-song = "Kisapmata"
-artist = "Rivermaya"
 
 [node name="Label" type="Label" parent="UI/ScrollContainer/VBoxContainer/Songselectbtn2"]
 layout_mode = 0
@@ -245,8 +241,6 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
-song = "Since U Been Gone"
-artist = "Kelly Clarkson"
 
 [node name="Label" type="Label" parent="UI/ScrollContainer/VBoxContainer/Songselectbtn3"]
 layout_mode = 0
@@ -276,8 +270,6 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
-song = "In My Life"
-artist = "The Beatles"
 
 [node name="Label" type="Label" parent="UI/ScrollContainer/VBoxContainer/Songselectbtn4"]
 layout_mode = 0
@@ -307,8 +299,6 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
-song = "Kaleidoscope World"
-artist = "Parokya Ni Edgar"
 
 [node name="Label" type="Label" parent="UI/ScrollContainer/VBoxContainer/Songselectbtn5"]
 layout_mode = 0
@@ -338,8 +328,6 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
-song = "Miss Independent"
-artist = "Ne-Yo"
 
 [node name="Label" type="Label" parent="UI/ScrollContainer/VBoxContainer/Songselectbtn6"]
 layout_mode = 0

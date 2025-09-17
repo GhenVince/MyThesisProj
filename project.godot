@@ -21,7 +21,7 @@ buses/default_bus_layout="res://Assets/Audio/default_bus_layout.tres"
 
 [autoload]
 
-SongManager="*res://Assets/Scripts/SongManager.gd"
+SongManager="*res://Assets/scripts/SongManager.gd"
 
 [dotnet]
 

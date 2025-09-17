@@ -7,6 +7,7 @@ extends Button
 
 
 func _pressed():
-	SongManager.instrumental_path = instrumental_path
-	SongManager.vocals_path = vocals_path
-	get_tree().change_scene_to_file("res://GameScene.tscn")
+	SongManager.bgm_path = "res://songs/Song1_BGM.ogg"
+	SongManager.vocal_path = "res://songs/Song1_Vocals.ogg"
+	SongManager.reference_pitch_path = "res://songs/Song1_Pitch.tres"
+	get_tree().change_scene("res://scenes/KaraokeScene.tscn")

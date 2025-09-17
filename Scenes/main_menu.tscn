@@ -1,15 +1,13 @@
 [gd_scene load_steps=8 format=3 uid="uid://drc36dih67rvm"]
 
 [ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="1_28flt"]
-[ext_resource type="Script" uid="uid://bedsursfqh5k0" path="res://Assets/Scripts/main_menu.gd" id="1_48xlc"]
+[ext_resource type="Script" uid="uid://bedsursfqh5k0" path="res://Assets/scripts/main_menu.gd" id="1_48xlc"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_28flt"]
 bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_28flt"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_48xlc"]
-bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ce3w2"]
+bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -28,8 +26,8 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_size = 5
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ce3w2"]
-bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_48xlc"]
+bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -39,6 +37,8 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_size = 5
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_28flt"]
 
 [node name="MainMenu" type="Control"]
 layout_mode = 3
@@ -106,10 +106,10 @@ custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
-theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_1ehe0")
 theme_override_styles/normal = SubResource("StyleBoxFlat_ce3w2")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1ehe0")
+theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
 text = "Play"
 
 [node name="Leaderboardsbtn" type="Button" parent="UI/VBoxContainer/HBoxContainer2"]
@@ -117,10 +117,10 @@ custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
-theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_1ehe0")
 theme_override_styles/normal = SubResource("StyleBoxFlat_ce3w2")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1ehe0")
+theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
 text = "Leaderboard"
 
 [node name="HBoxContainer" type="HBoxContainer" parent="UI/VBoxContainer"]
@@ -133,10 +133,10 @@ custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
-theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_1ehe0")
 theme_override_styles/normal = SubResource("StyleBoxFlat_ce3w2")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1ehe0")
+theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
 text = "Options"
 
 [node name="Exitbtn" type="Button" parent="UI/VBoxContainer/HBoxContainer"]
@@ -144,10 +144,10 @@ custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
-theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_1ehe0")
 theme_override_styles/normal = SubResource("StyleBoxFlat_ce3w2")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_1ehe0")
+theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
 text = "Exit"
 
 [connection signal="pressed" from="UI/VBoxContainer/HBoxContainer2/Playbtn" to="." method="_on_playbtn_pressed"]

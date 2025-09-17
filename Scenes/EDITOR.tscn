@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://bc3htch6lvt2d"]
+
+[ext_resource type="Script" uid="uid://ckb7cj8w0bp73" path="res://Scenes/PrecomputeReferencePitch.gd" id="1_1p8mq"]
+
+[node name="Editor" type="Node"]
+
+[node name="Node" type="Node" parent="."]
+script = ExtResource("1_1p8mq")
