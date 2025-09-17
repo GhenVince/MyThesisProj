@@ -1,75 +1,92 @@
 using Godot;
+using System;
+using NWaves.FeatureExtractors;
+using NWaves.FeatureExtractors.Options;
+using NWaves.Signals;
+using System.Collections.Generic;
 
-public partial class ScoringSystem : Node
+public partial class PitchDetector : Node
 {
-	private Label scoreLabel;
-	private Label accuracyLabel;
+	// Reference to your pitch detector node
+	[Export]
+	public NodePath PitchDetectorPath;
+
+	private PitchDetector _pitchDetector;
+	private List<float> _pitchBuffer = new List<float>(); // store detected pitches for 1 sec
+
+	// User settings
+	private float targetPitch = 440f; // Example: target note pitch
+	private float perfectMargin = 10f; // Hz
+	private float goodMargin = 30f; // Hz
+	private float updateInterval = 1.0f; // seconds
+
 	private float timer = 0f;
-	private int score = 0;
-	
-	// Pitch margins in cents
-	private const float PERFECT_MARGIN = 25f;
-	private const float GOOD_MARGIN = 75f;
-	
-	// Set by PitchDetector
-	public float CurrentDetectedPitch { get; set; } = 0f;
-	public float CurrentReferencePitch { get; set; } = 440f;
-	
+
+	[Signal]
+	public delegate void ScoreUpdatedEventHandler(float score, string comment);
+
 	public override void _Ready()
 	{
-		// Find UI labels
-		scoreLabel = GetNode<Label>("../UI/ScoreLabel");
-		accuracyLabel = GetNode<Label>("../UI/AccuracyLabel");
-		UpdateScoreLabel();
+		_pitchDetector = GetNode<PitchDetector>(PitchDetectorPath);
+		_pitchDetector.Connect("PitchDetected", Callable.From(this, "_OnPitchDetected"));
+
 	}
-	
+
+	private void _OnPitchDetected(float pitch)
+	{
+		// Store for smoothing
+		_pitchBuffer.Add(pitch);
+	}
+
 	public override void _Process(double delta)
 	{
 		timer += (float)delta;
-		if (timer >= 1f) // per second scoring
+
+		if (timer >= updateInterval)
 		{
-			EvaluatePitch(CurrentDetectedPitch, CurrentReferencePitch);
 			timer = 0f;
+
+			if (_pitchBuffer.Count == 0)
+				return;
+
+			// --- Real-time smoothing ---
+			float sum = 0f;
+			foreach (var p in _pitchBuffer)
+				sum += p;
+			float avgPitch = sum / _pitchBuffer.Count;
+
+			// --- Scoring ---
+			float diff = Math.Abs(avgPitch - targetPitch);
+			string comment = "";
+			float score = 0f;
+
+			if (diff <= perfectMargin)
+			{
+				comment = "Perfect";
+				score = 100f;
+			}
+			else if (diff <= goodMargin)
+			{
+				comment = "Good";
+				score = 70f;
+			}
+			else
+			{
+				comment = "Miss";
+				score = 0f;
+			}
+
+			// Emit score + comment
+			EmitSignal(SignalName.ScoreUpdated, score, comment);
+
+			// Clear buffer for next second
+			_pitchBuffer.Clear();
 		}
 	}
-	
-	private void EvaluatePitch(float detectedPitch, float referencePitch)
+
+	// Optional: change target pitch dynamically
+	public void SetTargetPitch(float pitch)
 	{
-		if (detectedPitch <= 0 || referencePitch <= 0)
-		{
-			accuracyLabel.Text = "Miss!";
-			return;
-		}
-		
-		// Calculate cents error using change of base formula: log₂(x) = ln(x) / ln(2)
-		float centsError = 1200 * (Mathf.Log(detectedPitch / referencePitch) / Mathf.Log(2));
-		
-		string comment;
-		int points = 0;
-		
-		if (Mathf.Abs(centsError) <= PERFECT_MARGIN)
-		{
-			comment = "Perfect!";
-			points = 100;
-		}
-		else if (Mathf.Abs(centsError) <= GOOD_MARGIN)
-		{
-			comment = "Good!";
-			points = 70;
-		}
-		else
-		{
-			comment = "Miss!";
-			points = 0;
-		}
-		
-		score += points;
-		UpdateScoreLabel();
-		accuracyLabel.Text = comment;
-	}
-	
-	private void UpdateScoreLabel()
-	{
-		scoreLabel.Text = $"Score: {score}";
+		targetPitch = pitch;
 	}
 }
