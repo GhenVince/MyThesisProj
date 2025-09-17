@@ -1,15 +1,17 @@
-[gd_scene load_steps=8 format=3 uid="uid://13jqm4n3t5u5"]
+[gd_scene load_steps=12 format=3 uid="uid://13jqm4n3t5u5"]
 
 [ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="1_hf1ha"]
 [ext_resource type="Script" uid="uid://wj2vrrvbhvd6" path="res://Assets/Scripts/gameplay.gd" id="1_wbxth"]
+[ext_resource type="Script" uid="uid://bhp6f6es6yw4q" path="res://Assets/Scripts/ScoringSystem.gd" id="2_r8bcl"]
+[ext_resource type="Script" uid="uid://d2cdbym7n8w5p" path="res://Assets/Scripts/AudioInput.gd" id="3_r8bcl"]
+[ext_resource type="Script" uid="uid://di8fd4sgoq6c0" path="res://Assets/Scripts/PitchDetector.cs" id="4_rlidi"]
+[ext_resource type="Script" uid="uid://cmvlpiwoq0x5o" path="res://Assets/Scripts/PitchGraph.gd" id="6_rlidi"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wbxth"]
 bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_wbxth"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m34ki"]
-bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r8bcl"]
+bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -28,8 +30,8 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_size = 5
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_r8bcl"]
-bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_m34ki"]
+bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -40,6 +42,8 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_size = 5
 
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_wbxth"]
+
 [node name="Gameplay" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -48,6 +52,19 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_wbxth")
+
+[node name="ScoringSystem" type="Node" parent="."]
+script = ExtResource("2_r8bcl")
+
+[node name="Audio" type="Node" parent="."]
+script = ExtResource("3_r8bcl")
+
+[node name="PitchDetector" type="Node" parent="Audio"]
+script = ExtResource("4_rlidi")
+
+[node name="InstrumentalPlayer" type="AudioStreamPlayer" parent="Audio"]
+
+[node name="VocalsPlayer" type="AudioStreamPlayer" parent="Audio"]
 
 [node name="UI" type="Control" parent="."]
 layout_mode = 1
@@ -82,19 +99,19 @@ text = "Karaoke Game"
 
 [node name="Song" type="Label" parent="UI"]
 layout_mode = 0
-offset_left = 30.0
-offset_top = 146.0
-offset_right = 390.0
-offset_bottom = 215.0
+offset_left = 82.0
+offset_top = 390.0
+offset_right = 442.0
+offset_bottom = 459.0
 theme_override_font_sizes/font_size = 30
 text = "hi"
 
 [node name="Song2" type="Label" parent="UI"]
 layout_mode = 0
-offset_left = 28.0
-offset_top = 188.0
-offset_right = 388.0
-offset_bottom = 257.0
+offset_left = 81.0
+offset_top = 346.0
+offset_right = 441.0
+offset_bottom = 415.0
 theme_override_font_sizes/font_size = 21
 text = "hi"
 
@@ -106,24 +123,45 @@ offset_right = 144.0
 offset_bottom = 62.0
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-theme_override_styles/focus = SubResource("StyleBoxEmpty_wbxth")
-theme_override_styles/hover = SubResource("StyleBoxFlat_m34ki")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_kwrm5")
 theme_override_styles/normal = SubResource("StyleBoxFlat_r8bcl")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_kwrm5")
+theme_override_styles/hover = SubResource("StyleBoxFlat_m34ki")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_wbxth")
 text = "< Back"
 
 [node name="ScoreLabel" type="Label" parent="UI"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+layout_mode = 1
+offset_left = 20.0
+offset_top = 161.0
+offset_right = 111.0
+offset_bottom = 195.0
+theme_override_font_sizes/font_size = 24
+text = "Score: 0"
 
 [node name="AccuracyLabel" type="Label" parent="UI"]
-layout_mode = 0
-offset_right = 40.0
-offset_bottom = 23.0
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -166.0
+offset_right = 59.0
+offset_bottom = -132.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "Waiting...\""
 
-[node name="Node2D" type="Node2D" parent="."]
+[node name="PitchGraph" type="Control" parent="."]
+anchors_preset = 0
+offset_right = 1152.0
+offset_bottom = 648.0
+script = ExtResource("6_rlidi")
 
-[node name="PlayerLine" type="Line2D" parent="Node2D"]
+[node name="ReferenceLine" type="Line2D" parent="PitchGraph"]
+
+[node name="PlayerLine" type="Line2D" parent="PitchGraph"]
 
 [connection signal="pressed" from="UI/Back" to="." method="_on_back_pressed"]

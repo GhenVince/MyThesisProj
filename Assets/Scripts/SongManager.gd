@@ -1,5 +1,6 @@
 extends Control
-
+var instrumental_path: String
+var vocals_path: String
 
 
 func _ready():

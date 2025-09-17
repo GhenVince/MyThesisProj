@@ -1,8 +1,8 @@
 [gd_scene load_steps=24 format=3 uid="uid://c3d6wmma86oth"]
 
-[ext_resource type="Script" uid="uid://csjk5rxtqc300" path="res://Assets/Scripts/song_selection.gd" id="1_0b3ay"]
+[ext_resource type="Script" uid="uid://csjk5rxtqc300" path="res://Assets/Scripts/SongManager.gd" id="1_0b3ay"]
 [ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="1_hjcgt"]
-[ext_resource type="Script" uid="uid://bbw7imwd5awqj" path="res://Assets/Scripts/songselectbtn_1.gd" id="3_iwmk6"]
+[ext_resource type="Script" uid="uid://bbw7imwd5awqj" path="res://Assets/Scripts/SongSelectButton.gd" id="3_iwmk6"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y0f0h"]
 bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
@@ -38,10 +38,8 @@ VScrollBar/styles/grabber_pressed = SubResource("StyleBoxEmpty_1lfv0")
 VScrollBar/styles/scroll = SubResource("StyleBoxEmpty_0b3ay")
 VScrollBar/styles/scroll_focus = SubResource("StyleBoxEmpty_g42s2")
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_t6frq"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sr4km"]
-bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3p3aq"]
+bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -60,8 +58,8 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_size = 5
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_3p3aq"]
-bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_sr4km"]
+bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -72,10 +70,10 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_size = 5
 
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3p3aq"]
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_t6frq"]
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ssw7t"]
-bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bv5xc"]
+bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -94,8 +92,8 @@ corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_size = 5
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bv5xc"]
-bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ssw7t"]
+bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
 border_width_left = 2
 border_width_top = 2
 border_width_right = 2
@@ -105,6 +103,8 @@ corner_radius_top_right = 10
 corner_radius_bottom_right = 10
 corner_radius_bottom_left = 10
 shadow_size = 5
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3p3aq"]
 
 [node name="SongSelection" type="Control"]
 layout_mode = 3
@@ -178,10 +178,10 @@ custom_minimum_size = Vector2(0, 85)
 layout_mode = 2
 size_flags_stretch_ratio = 0.0
 mouse_filter = 1
-theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
-theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/normal = SubResource("StyleBoxFlat_3p3aq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
 song = "Akala"
 artist = "Parokya Ni Edgar"
@@ -209,10 +209,10 @@ custom_minimum_size = Vector2(0, 85)
 layout_mode = 2
 size_flags_stretch_ratio = 0.0
 mouse_filter = 1
-theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
-theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/normal = SubResource("StyleBoxFlat_3p3aq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
 song = "Kisapmata"
 artist = "Rivermaya"
@@ -240,10 +240,10 @@ custom_minimum_size = Vector2(0, 85)
 layout_mode = 2
 size_flags_stretch_ratio = 0.0
 mouse_filter = 1
-theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
-theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/normal = SubResource("StyleBoxFlat_3p3aq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
 song = "Since U Been Gone"
 artist = "Kelly Clarkson"
@@ -271,10 +271,10 @@ custom_minimum_size = Vector2(0, 85)
 layout_mode = 2
 size_flags_stretch_ratio = 0.0
 mouse_filter = 1
-theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
-theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/normal = SubResource("StyleBoxFlat_3p3aq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
 song = "In My Life"
 artist = "The Beatles"
@@ -302,10 +302,10 @@ custom_minimum_size = Vector2(0, 85)
 layout_mode = 2
 size_flags_stretch_ratio = 0.0
 mouse_filter = 1
-theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
-theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/normal = SubResource("StyleBoxFlat_3p3aq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
 song = "Kaleidoscope World"
 artist = "Parokya Ni Edgar"
@@ -333,10 +333,10 @@ custom_minimum_size = Vector2(0, 85)
 layout_mode = 2
 size_flags_stretch_ratio = 0.0
 mouse_filter = 1
-theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
-theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
 theme_override_styles/normal = SubResource("StyleBoxFlat_3p3aq")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_p5buf")
+theme_override_styles/hover = SubResource("StyleBoxFlat_sr4km")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_t6frq")
 script = ExtResource("3_iwmk6")
 song = "Miss Independent"
 artist = "Ne-Yo"
@@ -367,10 +367,10 @@ offset_right = 144.0
 offset_bottom = 62.0
 size_flags_horizontal = 3
 theme_override_font_sizes/font_size = 20
-theme_override_styles/focus = SubResource("StyleBoxEmpty_3p3aq")
-theme_override_styles/hover = SubResource("StyleBoxFlat_ssw7t")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_y6b83")
 theme_override_styles/normal = SubResource("StyleBoxFlat_bv5xc")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_y6b83")
+theme_override_styles/hover = SubResource("StyleBoxFlat_ssw7t")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_3p3aq")
 text = "< Back"
 
 [connection signal="pressed" from="UI/ScrollContainer/VBoxContainer/Songselectbtn1" to="UI/ScrollContainer/VBoxContainer/Songselectbtn1" method="_on_pressed"]
