@@ -1,11 +1,8 @@
-extends Control
-var instrumental_path: String
-var vocals_path: String
+# SongManager.gd
+extends Node
 
-
-func _ready():
-	pass
-
-
-func _on_back_pressed() -> void:
-	get_tree().change_scene_to_file("res://Scenes/main_menu.tscn")
+# Store the selected song
+var bgm_path: String = ""
+var vocal_path: String = ""
+var reference_pitch_path: String = ""  # precomputed pitch file
+var song_duration: float = 0.0         # in seconds
