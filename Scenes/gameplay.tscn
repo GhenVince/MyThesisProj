@@ -166,5 +166,4 @@ script = ExtResource("6_rlidi")
 
 [node name="PlayerLine" type="Line2D" parent="PitchGraph"]
 
-[connection signal="PitchDetected" from="Audio/PitchDetector" to="ScoringSystem" method="_on_pitch_detected"]
 [connection signal="pressed" from="UI/Back" to="." method="_on_back_pressed"]

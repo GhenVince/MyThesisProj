@@ -1,8 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://bc3htch6lvt2d"]
+[gd_scene load_steps=3 format=3 uid="uid://bc3htch6lvt2d"]
 
-[ext_resource type="Script" uid="uid://ckb7cj8w0bp73" path="res://Scenes/PrecomputeReferencePitch.gd" id="1_1p8mq"]
+[ext_resource type="Script" uid="uid://og8wxrupi7sx" path="res://Scenes/editor.gd" id="1_x1pyd"]
+[ext_resource type="Script" uid="uid://d3q55nb736s4q" path="res://Assets/scripts/PrecomputeReferencePitch.cs" id="2_x1pyd"]
 
 [node name="Editor" type="Node"]
+script = ExtResource("1_x1pyd")
 
-[node name="Node" type="Node" parent="."]
-script = ExtResource("1_1p8mq")
+[node name="PrecomputeReferencePitch" type="Node" parent="."]
+script = ExtResource("2_x1pyd")

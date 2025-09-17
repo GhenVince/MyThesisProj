@@ -1,6 +1,6 @@
 ﻿Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2012
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KaraokeProject", "KaraokeProject.csproj", "{4E3369F3-947B-44ED-A6AD-8CF312EC330F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KaraokeProject", "KaraokeProject.csproj", "{BC63FC63-AD78-41D3-9CD7-28C43CEB5597}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -9,11 +9,11 @@ Global
 	ExportRelease|Any CPU = ExportRelease|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{4E3369F3-947B-44ED-A6AD-8CF312EC330F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{4E3369F3-947B-44ED-A6AD-8CF312EC330F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{4E3369F3-947B-44ED-A6AD-8CF312EC330F}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
-		{4E3369F3-947B-44ED-A6AD-8CF312EC330F}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
-		{4E3369F3-947B-44ED-A6AD-8CF312EC330F}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
-		{4E3369F3-947B-44ED-A6AD-8CF312EC330F}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
+		{BC63FC63-AD78-41D3-9CD7-28C43CEB5597}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC63FC63-AD78-41D3-9CD7-28C43CEB5597}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC63FC63-AD78-41D3-9CD7-28C43CEB5597}.ExportDebug|Any CPU.ActiveCfg = ExportDebug|Any CPU
+		{BC63FC63-AD78-41D3-9CD7-28C43CEB5597}.ExportDebug|Any CPU.Build.0 = ExportDebug|Any CPU
+		{BC63FC63-AD78-41D3-9CD7-28C43CEB5597}.ExportRelease|Any CPU.ActiveCfg = ExportRelease|Any CPU
+		{BC63FC63-AD78-41D3-9CD7-28C43CEB5597}.ExportRelease|Any CPU.Build.0 = ExportRelease|Any CPU
 	EndGlobalSection
 EndGlobal

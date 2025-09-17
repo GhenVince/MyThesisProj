@@ -31,6 +31,10 @@ project/assembly_name="KaraokeProject"
 
 version_control/autoload_on_startup=true
 
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/precompute_pitch/plugin.cfg")
+
 [input_devices]
 
 pointing/emulate_touch_from_mouse=true

@@ -1,0 +1,24 @@
+[remap]
+
+importer="wav"
+type="AudioStreamWAV"
+uid="uid://brfsuaqjtwkan"
+path="res://.godot/imported/WITH A SMILE [music].wav-d6b25a61b5cc5d70b767175ccac6a235.sample"
+
+[deps]
+
+source_file="res://Assets/songs/BackgroundMusic/WITH A SMILE [music].wav"
+dest_files=["res://.godot/imported/WITH A SMILE [music].wav-d6b25a61b5cc5d70b767175ccac6a235.sample"]
+
+[params]
+
+force/8_bit=false
+force/mono=false
+force/max_rate=false
+force/max_rate_hz=44100
+edit/trim=false
+edit/normalize=false
+edit/loop_mode=0
+edit/loop_begin=0
+edit/loop_end=-1
+compress/mode=2
