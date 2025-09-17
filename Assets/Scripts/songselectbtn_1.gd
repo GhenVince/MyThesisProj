@@ -11,6 +11,6 @@ func _on_pressed():
 	
 	scene2.recieve_song_title = song
 	scene2.recieve_song_artist = artist
-	
+
 	get_tree().get_root().add_child(scene2)
-	get_tree().get_root().remove_child(get_parent())
+	#get_tree().get_root().remove_child(get_parent())

@@ -360,6 +360,7 @@ theme_override_font_sizes/font_size = 20
 text = "by Ne-Yo"
 
 [node name="Back" type="Button" parent="UI"]
+layout_mode = 0
 offset_left = 18.0
 offset_top = 17.0
 offset_right = 144.0

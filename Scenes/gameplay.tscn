@@ -82,22 +82,24 @@ text = "Karaoke Game"
 
 [node name="Song" type="Label" parent="UI"]
 layout_mode = 0
-offset_left = 327.0
-offset_top = 282.0
-offset_right = 687.0
-offset_bottom = 337.0
-theme_override_font_sizes/font_size = 50
+offset_left = 30.0
+offset_top = 146.0
+offset_right = 390.0
+offset_bottom = 215.0
+theme_override_font_sizes/font_size = 30
 text = "hi"
 
 [node name="Song2" type="Label" parent="UI"]
-offset_left = 327.0
-offset_top = 359.0
-offset_right = 687.0
-offset_bottom = 428.0
-theme_override_font_sizes/font_size = 50
+layout_mode = 0
+offset_left = 28.0
+offset_top = 188.0
+offset_right = 388.0
+offset_bottom = 257.0
+theme_override_font_sizes/font_size = 21
 text = "hi"
 
 [node name="Back" type="Button" parent="UI"]
+layout_mode = 0
 offset_left = 18.0
 offset_top = 17.0
 offset_right = 144.0
@@ -109,5 +111,19 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_m34ki")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_kwrm5")
 theme_override_styles/normal = SubResource("StyleBoxFlat_r8bcl")
 text = "< Back"
+
+[node name="ScoreLabel" type="Label" parent="UI"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="AccuracyLabel" type="Label" parent="UI"]
+layout_mode = 0
+offset_right = 40.0
+offset_bottom = 23.0
+
+[node name="Node2D" type="Node2D" parent="."]
+
+[node name="PlayerLine" type="Line2D" parent="Node2D"]
 
 [connection signal="pressed" from="UI/Back" to="." method="_on_back_pressed"]
