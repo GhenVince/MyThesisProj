@@ -3,90 +3,68 @@ using System;
 using NWaves.FeatureExtractors;
 using NWaves.FeatureExtractors.Options;
 using NWaves.Signals;
-using System.Collections.Generic;
 
 public partial class PitchDetector : Node
 {
-	// Reference to your pitch detector node
-	[Export]
-	public NodePath PitchDetectorPath;
-
-	private PitchDetector _pitchDetector;
-	private List<float> _pitchBuffer = new List<float>(); // store detected pitches for 1 sec
-
-	// User settings
-	private float targetPitch = 440f; // Example: target note pitch
-	private float perfectMargin = 10f; // Hz
-	private float goodMargin = 30f; // Hz
-	private float updateInterval = 1.0f; // seconds
-
-	private float timer = 0f;
+	private AudioEffectCapture micCapture;
+	private PitchExtractor _pitchExtractor;
+	private float[] _buffer = new float[2048];
 
 	[Signal]
-	public delegate void ScoreUpdatedEventHandler(float score, string comment);
+	public delegate void PitchDetectedEventHandler(float pitch);
 
 	public override void _Ready()
 	{
-		_pitchDetector = GetNode<PitchDetector>(PitchDetectorPath);
-		_pitchDetector.Connect("PitchDetected", Callable.From(this, "_OnPitchDetected"));
+		// Get mic input from the "Record" bus (replace 0 with your bus index)
+		micCapture = AudioServer.GetBusEffect(0, 0) as AudioEffectCapture;
 
-	}
+		int sampleRate = 44100;
+		int frameSize = 2048;
+		int hopSize = 512;
 
-	private void _OnPitchDetected(float pitch)
-	{
-		// Store for smoothing
-		_pitchBuffer.Add(pitch);
+		var pitchOptions = new PitchOptions
+		{
+			SamplingRate = sampleRate,
+			FrameDuration = (double)frameSize / sampleRate,
+			HopDuration = (double)hopSize / sampleRate,
+			LowFrequency = 80,
+			HighFrequency = 400
+		};
+
+		_pitchExtractor = new PitchExtractor(pitchOptions);
 	}
 
 	public override void _Process(double delta)
 	{
-		timer += (float)delta;
+		if (micCapture == null || !micCapture.CanGetBuffer(2048))
+			return;
 
-		if (timer >= updateInterval)
+		var data = micCapture.GetBuffer(2048);
+		for (int i = 0; i < data.Length; i++)
+			_buffer[i] = (data[i].X + data[i].Y) / 2.0f;
+
+		var signal = new DiscreteSignal(44100, _buffer);
+		var pitchVectors = _pitchExtractor.ComputeFrom(signal);
+
+		if (pitchVectors.Count == 0)
+			return;
+
+		// Average all frames for smoothing
+		float sum = 0;
+		int count = 0;
+		foreach (var frame in pitchVectors)
 		{
-			timer = 0f;
-
-			if (_pitchBuffer.Count == 0)
-				return;
-
-			// --- Real-time smoothing ---
-			float sum = 0f;
-			foreach (var p in _pitchBuffer)
-				sum += p;
-			float avgPitch = sum / _pitchBuffer.Count;
-
-			// --- Scoring ---
-			float diff = Math.Abs(avgPitch - targetPitch);
-			string comment = "";
-			float score = 0f;
-
-			if (diff <= perfectMargin)
+			if (frame.Length > 0 && frame[0] > 0)
 			{
-				comment = "Perfect";
-				score = 100f;
+				sum += frame[0];
+				count++;
 			}
-			else if (diff <= goodMargin)
-			{
-				comment = "Good";
-				score = 70f;
-			}
-			else
-			{
-				comment = "Miss";
-				score = 0f;
-			}
-
-			// Emit score + comment
-			EmitSignal(SignalName.ScoreUpdated, score, comment);
-
-			// Clear buffer for next second
-			_pitchBuffer.Clear();
 		}
-	}
 
-	// Optional: change target pitch dynamically
-	public void SetTargetPitch(float pitch)
-	{
-		targetPitch = pitch;
+		if (count > 0)
+		{
+			float avgPitch = sum / count;
+			EmitSignal(SignalName.PitchDetected, avgPitch);
+		}
 	}
 }
