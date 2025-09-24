@@ -1,10 +1,9 @@
-[gd_scene load_steps=12 format=3 uid="uid://13jqm4n3t5u5"]
+[gd_scene load_steps=11 format=3 uid="uid://13jqm4n3t5u5"]
 
 [ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="1_hf1ha"]
 [ext_resource type="Script" uid="uid://wj2vrrvbhvd6" path="res://Assets/scripts/gameplay.gd" id="1_wbxth"]
-[ext_resource type="Script" uid="uid://bhp6f6es6yw4q" path="res://Assets/scripts/ScoringSystem.gd" id="2_r8bcl"]
 [ext_resource type="Script" uid="uid://d2cdbym7n8w5p" path="res://Assets/scripts/AudioInput.gd" id="3_r8bcl"]
-[ext_resource type="Script" uid="uid://di8fd4sgoq6c0" path="res://Assets/scripts/PitchDetector.cs" id="4_rlidi"]
+[ext_resource type="Script" uid="uid://bcfcie88mn2lj" path="res://Scenes/PitchDetector.gd" id="4_rlidi"]
 [ext_resource type="Script" uid="uid://cmvlpiwoq0x5o" path="res://Assets/scripts/PitchGraph.gd" id="6_rlidi"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wbxth"]
@@ -54,13 +53,19 @@ grow_vertical = 2
 script = ExtResource("1_wbxth")
 
 [node name="ScoringSystem" type="Node" parent="."]
-script = ExtResource("2_r8bcl")
 
 [node name="Audio" type="Node" parent="."]
 script = ExtResource("3_r8bcl")
 
 [node name="PitchDetector" type="Node" parent="Audio"]
 script = ExtResource("4_rlidi")
+
+[node name="PitchLabel" type="Label" parent="Audio/PitchDetector"]
+offset_left = 491.0
+offset_top = 343.0
+offset_right = 542.0
+offset_bottom = 392.0
+theme_override_font_sizes/font_size = 40
 
 [node name="InstrumentalPlayer" type="AudioStreamPlayer" parent="Audio"]
 
