@@ -12,6 +12,13 @@ var buffer_size: int = 1024
 var yin_threshold: float = 0.15
 var recording_bus_index: int
 
+# Noise filtering parameters
+var noise_gate_threshold: float = 0.0001  # Lower threshold - more sensitive
+var signal_history: Array[float] = []
+var history_size: int = 10
+var pitch_stability_threshold: float = 50.0  # Hz difference for stable pitch
+var show_debug_levels: bool = true  # Show signal levels for debugging
+
 func _ready():
 	setup_audio_recording()
 	pitch_label.text = "Pitch: Setting up..."
@@ -35,21 +42,38 @@ func setup_audio_recording():
 	audio_stream_player.stream = microphone_stream
 	audio_stream_player.bus = "Recording"  # Route to our recording bus
 	
+	# Much lower volume to prevent feedback and reverb detection
+	audio_stream_player.volume_db = -60  # Very quiet
+	
 	# Start recording
 	audio_stream_player.play()
 	
 	print("Audio recording setup complete")
 	pitch_label.text = "Pitch: Listening..."
 
-func _process(delta):
+func _process(_delta):
 	var audio_data = get_audio_samples()
 	if audio_data.size() >= buffer_size:
-		var pitch = yin_pitch_detection(audio_data)
-		if pitch > 80 and pitch < 2000:  # Reasonable pitch range
-			var note_name = frequency_to_note(pitch)
-			pitch_label.text = "Pitch: %.1f Hz (%s)" % [pitch, note_name]
+		# Calculate and show signal level for debugging
+		var signal_level = calculate_signal_level(audio_data)
+		
+		if show_debug_levels:
+			print("Signal level: %.6f (threshold: %.6f)" % [signal_level, noise_gate_threshold])
+		
+		# Apply noise gate - check if signal is strong enough
+		if signal_level > noise_gate_threshold:
+			var pitch = yin_pitch_detection(audio_data)
+			if pitch > 80 and pitch < 2000:  # Reasonable pitch range
+				# Apply pitch stability filter
+				if is_pitch_stable(pitch):
+					var note_name = frequency_to_note(pitch)
+					pitch_label.text = "Pitch: %.1f Hz (%s)" % [pitch, note_name]
+				else:
+					pitch_label.text = "Pitch: Unstable signal"
+			else:
+				pitch_label.text = "Pitch: No clear pitch detected"
 		else:
-			pitch_label.text = "Pitch: No clear pitch detected"
+			pitch_label.text = "Signal too weak (%.6f)" % signal_level
 
 func get_audio_samples() -> PackedFloat32Array:
 	var available_frames = audio_effect_capture.get_frames_available()
@@ -58,13 +82,65 @@ func get_audio_samples() -> PackedFloat32Array:
 		var stereo_frames = audio_effect_capture.get_buffer(buffer_size)
 		var mono_samples = PackedFloat32Array()
 		
-		# Convert stereo to mono
+		# Convert stereo to mono and apply simple high-pass filter
 		for frame in stereo_frames:
-			mono_samples.append((frame.x + frame.y) * 0.5)  # Mix stereo to mono
+			var sample = (frame.x + frame.y) * 0.5  # Mix stereo to mono
+			mono_samples.append(sample)
 		
-		return mono_samples
+		# Apply simple high-pass filter to remove low-frequency noise
+		return apply_high_pass_filter(mono_samples)
 	
 	return PackedFloat32Array()
+
+func apply_high_pass_filter(samples: PackedFloat32Array) -> PackedFloat32Array:
+	# Simple high-pass filter to remove low-frequency noise and reverb
+	var filtered = PackedFloat32Array()
+	var alpha: float = 0.99  # Filter coefficient (higher = more filtering)
+	var prev_input: float = 0.0
+	var prev_output: float = 0.0
+	
+	for sample in samples:
+		var output = alpha * (prev_output + sample - prev_input)
+		filtered.append(output)
+		prev_input = sample
+		prev_output = output
+	
+	return filtered
+
+func calculate_signal_level(samples: PackedFloat32Array) -> float:
+	# Calculate RMS (Root Mean Square) for better noise detection
+	var sum_squares: float = 0.0
+	for sample in samples:
+		sum_squares += sample * sample
+	
+	return sqrt(sum_squares / float(samples.size()))
+
+func is_signal_above_noise_gate(samples: PackedFloat32Array) -> bool:
+	return calculate_signal_level(samples) > noise_gate_threshold
+
+func is_pitch_stable(current_pitch: float) -> bool:
+	# Add current pitch to history
+	signal_history.append(current_pitch)
+	if signal_history.size() > history_size:
+		signal_history.pop_front()
+	
+	# Need at least 3 readings for stability check
+	if signal_history.size() < 3:
+		return false
+	
+	# Check if recent pitches are consistent
+	var recent_pitches = signal_history.slice(-3)  # Last 3 pitches
+	var avg_pitch: float = 0.0
+	for pitch in recent_pitches:
+		avg_pitch += pitch
+	avg_pitch /= float(recent_pitches.size())
+	
+	# Check if all recent pitches are within threshold of average
+	for pitch in recent_pitches:
+		if abs(pitch - avg_pitch) > pitch_stability_threshold:
+			return false
+	
+	return true
 
 func yin_pitch_detection(samples: PackedFloat32Array) -> float:
 	var half_buffer = buffer_size / 2
@@ -87,7 +163,7 @@ func yin_pitch_detection(samples: PackedFloat32Array) -> float:
 	for tau in range(1, half_buffer):
 		cumulative_sum += yin_buffer[tau]
 		if cumulative_sum != 0:
-			yin_buffer[tau] = yin_buffer[tau] * tau / cumulative_sum
+			yin_buffer[tau] = yin_buffer[tau] * float(tau) / cumulative_sum
 		else:
 			yin_buffer[tau] = 1.0
 	
