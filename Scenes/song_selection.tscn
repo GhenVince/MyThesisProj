@@ -1,6 +1,7 @@
-[gd_scene load_steps=23 format=3 uid="uid://c3d6wmma86oth"]
+[gd_scene load_steps=24 format=3 uid="uid://c3d6wmma86oth"]
 
 [ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="1_hjcgt"]
+[ext_resource type="Script" uid="uid://bu01ilojuoxbo" path="res://Scenes/back1.gd" id="3_0b3ay"]
 [ext_resource type="Script" uid="uid://bbw7imwd5awqj" path="res://Assets/scripts/SongSelectButton.gd" id="3_iwmk6"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y0f0h"]
@@ -215,6 +216,8 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_y6b83")
 theme_override_styles/hover = SubResource("StyleBoxFlat_ssw7t")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_3p3aq")
 text = "< Back"
+script = ExtResource("3_0b3ay")
 
 [connection signal="pressed" from="UI/ScrollContainer/VBoxContainer/Songselectbtn1" to="UI/ScrollContainer/VBoxContainer/Songselectbtn1" method="_on_pressed"]
 [connection signal="pressed" from="UI/Back" to="." method="_on_back_pressed"]
+[connection signal="pressed" from="UI/Back" to="UI/Back" method="_on_pressed"]
