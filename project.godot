@@ -22,7 +22,8 @@ driver/enable_input=true
 
 [autoload]
 
-SongManager="*res://Assets/scripts/SongManager.gd"
+GameManager="*res://Assets/scripts/GameManager.gd"
+SongDatabase="*res://Assets/scripts/SongDatabase.gd"
 
 [dotnet]
 

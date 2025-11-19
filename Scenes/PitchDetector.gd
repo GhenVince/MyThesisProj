@@ -143,7 +143,8 @@ func is_pitch_stable(current_pitch: float) -> bool:
 	return true
 
 func yin_pitch_detection(samples: PackedFloat32Array) -> float:
-	var half_buffer = buffer_size / 2
+	var half_buffer
+	half_buffer = float (buffer_size) / 2
 	var yin_buffer = PackedFloat32Array()
 	yin_buffer.resize(half_buffer)
 	
