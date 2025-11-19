@@ -5,7 +5,6 @@
 [ext_resource type="Script" uid="uid://d2cdbym7n8w5p" path="res://Assets/scripts/AudioInput.gd" id="3_r8bcl"]
 [ext_resource type="Script" uid="uid://bcfcie88mn2lj" path="res://Scenes/PitchDetector.gd" id="4_rlidi"]
 [ext_resource type="Script" uid="uid://csaae3clactam" path="res://Scenes/back.gd" id="5_rlidi"]
-[ext_resource type="Script" uid="uid://cmvlpiwoq0x5o" path="res://Assets/scripts/PitchGraph.gd" id="6_rlidi"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wbxth"]
 bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
@@ -43,6 +42,42 @@ corner_radius_bottom_left = 10
 shadow_size = 5
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_puebw"]
+
+[sub_resource type="GDScript" id="GDScript_r8bcl"]
+script/source = "extends Control
+
+@onready var reference_line = $ReferenceLine
+@onready var player_line = $PlayerLine
+
+var reference_points: Array[Vector2] = []
+var player_points: Array[Vector2] = []
+var time := 0.0
+
+const PIXELS_PER_SECOND := 200.0  # speed of graph scrolling
+
+func add_pitch(detected_pitch: float, reference_pitch: float, delta: float):
+	time += delta * PIXELS_PER_SECOND
+
+	var y_ref = _pitch_to_y(reference_pitch)
+	var y_player = _pitch_to_y(detected_pitch)
+
+	reference_points.append(Vector2(time, y_ref))
+	player_points.append(Vector2(time, y_player))
+
+	reference_line.points = reference_points
+	player_line.points = player_points
+
+	# Optional: remove old points for long songs
+	if reference_points.size() > 1000:
+		reference_points.pop_front()
+		player_points.pop_front()
+
+func _pitch_to_y(pitch: float) -> float:
+	if pitch <= 0:
+		return 0
+	# Convert to cents relative to A4 and scale for display
+	return 400 - (1200.0 * log(pitch / 440.0) / log(2))
+"
 
 [node name="Gameplay" type="Control"]
 layout_mode = 3
@@ -91,6 +126,31 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_wbxth")
 
+[node name="ScoreLabel" type="Label" parent="UI/Panel"]
+layout_mode = 1
+offset_left = 20.0
+offset_top = 161.0
+offset_right = 111.0
+offset_bottom = 195.0
+theme_override_font_sizes/font_size = 24
+text = "Score: 0"
+
+[node name="AccuracyLabel" type="Label" parent="UI/Panel"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -59.0
+offset_top = -166.0
+offset_right = 59.0
+offset_bottom = -132.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "Waiting...\""
+
 [node name="Title" type="Label" parent="UI"]
 layout_mode = 1
 anchors_preset = 5
@@ -123,31 +183,6 @@ offset_bottom = 415.0
 theme_override_font_sizes/font_size = 21
 text = "hi"
 
-[node name="ScoreLabel" type="Label" parent="UI"]
-layout_mode = 1
-offset_left = 20.0
-offset_top = 161.0
-offset_right = 111.0
-offset_bottom = 195.0
-theme_override_font_sizes/font_size = 24
-text = "Score: 0"
-
-[node name="AccuracyLabel" type="Label" parent="UI"]
-layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -59.0
-offset_top = -166.0
-offset_right = 59.0
-offset_bottom = -132.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_font_sizes/font_size = 24
-text = "Waiting...\""
-
 [node name="Back" type="Button" parent="UI"]
 layout_mode = 0
 offset_left = 18.0
@@ -167,7 +202,7 @@ script = ExtResource("5_rlidi")
 anchors_preset = 0
 offset_right = 1152.0
 offset_bottom = 648.0
-script = ExtResource("6_rlidi")
+script = SubResource("GDScript_r8bcl")
 
 [node name="ReferenceLine" type="Line2D" parent="PitchGraph"]
 
