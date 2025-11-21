@@ -1,10 +1,10 @@
 # PauseMenu.gd
 extends Control
 
-@onready var continue_button = $Panel/VBoxContainer/ContinueButton
-@onready var retry_button = $Panel/VBoxContainer/RetryButton
-@onready var options_button = $Panel/VBoxContainer/OptionsButton
-@onready var menu_button = $Panel/VBoxContainer/MenuButton
+@onready var continue_button = $PanelContainer/Panel/VBoxContainer/ContinueButton
+@onready var retry_button = $PanelContainer/Panel/VBoxContainer/RetryButton
+@onready var options_button = $PanelContainer/Panel/VBoxContainer/OptionsButton
+@onready var menu_button = $PanelContainer/Panel/VBoxContainer/MenuButton
 
 signal continue_requested
 signal retry_requested

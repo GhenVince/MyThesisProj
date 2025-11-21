@@ -1,8 +1,9 @@
-[gd_scene load_steps=10 format=3 uid="uid://13jqm4n3t5u5"]
+[gd_scene load_steps=11 format=3 uid="uid://13jqm4n3t5u5"]
 
 [ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="1_hf1ha"]
 [ext_resource type="Script" uid="uid://wj2vrrvbhvd6" path="res://Assets/scripts/Gameplay.gd" id="1_wbxth"]
 [ext_resource type="Script" uid="uid://cdtngb1vbtyrw" path="res://Assets/scripts/PitchDisplay.gd" id="2_kwrm5"]
+[ext_resource type="PackedScene" uid="uid://cn8wtgg1hfr17" path="res://Scenes/pause_menu.tscn" id="5_r8bcl"]
 [ext_resource type="Script" uid="uid://csaae3clactam" path="res://Scenes/back.gd" id="5_rlidi"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wbxth"]
@@ -104,13 +105,44 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 43.0
-offset_top = 267.0
-offset_right = 43.0
-offset_bottom = 267.0
+offset_top = 491.0
+offset_bottom = 2.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_wbxth")
+
+[node name="LyricsLabel" type="Label" parent="UI/BottomPanel"]
+layout_mode = 0
+offset_left = 11.0
+offset_top = 27.0
+offset_right = 1137.0
+offset_bottom = 96.0
+theme_override_font_sizes/font_size = 30
+text = "hi"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="LyricsLabel2" type="Label" parent="UI/BottomPanel"]
+layout_mode = 0
+offset_left = 11.0
+offset_top = 27.0
+offset_right = 1137.0
+offset_bottom = 96.0
+theme_override_font_sizes/font_size = 30
+text = "hi"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CountdownLabel" type="Label" parent="UI"]
+layout_mode = 0
+offset_left = 11.0
+offset_top = 27.0
+offset_right = 1137.0
+offset_bottom = 96.0
+theme_override_font_sizes/font_size = 30
+text = "hi"
+horizontal_alignment = 1
+vertical_alignment = 1
 
 [node name="Title" type="Label" parent="UI"]
 layout_mode = 1
@@ -126,24 +158,6 @@ theme_override_fonts/font = ExtResource("1_hf1ha")
 theme_override_font_sizes/font_size = 69
 text = "Karaoke Game"
 
-[node name="Song" type="Label" parent="UI"]
-layout_mode = 0
-offset_left = 82.0
-offset_top = 390.0
-offset_right = 442.0
-offset_bottom = 459.0
-theme_override_font_sizes/font_size = 30
-text = "hi"
-
-[node name="Song2" type="Label" parent="UI"]
-layout_mode = 0
-offset_left = 81.0
-offset_top = 346.0
-offset_right = 441.0
-offset_bottom = 415.0
-theme_override_font_sizes/font_size = 21
-text = "hi"
-
 [node name="Back" type="Button" parent="UI"]
 layout_mode = 0
 offset_left = 18.0
@@ -158,5 +172,16 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_urrcd")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_puebw")
 text = "< Back"
 script = ExtResource("5_rlidi")
+
+[node name="AudioPlayer" type="AudioStreamPlayer" parent="UI"]
+
+[node name="VocalPlayer" type="AudioStreamPlayer" parent="UI"]
+
+[node name="PauseMenu" parent="UI" instance=ExtResource("5_r8bcl")]
+layout_mode = 1
+offset_left = 10.0
+offset_top = 5.0
+offset_right = 10.0
+offset_bottom = 5.0
 
 [connection signal="pressed" from="UI/Back" to="UI/Back" method="_on_pressed"]
