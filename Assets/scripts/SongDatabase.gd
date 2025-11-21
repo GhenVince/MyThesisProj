@@ -50,8 +50,7 @@ func get_songs_by_genre(genre: String) -> Array:
 func search_songs(query: String) -> Array:
 	var q = query.to_lower()
 	return songs.filter(func(s): 
-		return s.get("title", "").to_lower().contains(q) or 
-			   s.get("artist", "").to_lower().contains(q)
+		return s.get("title", "").to_lower().contains(q) or s.get("artist", "").to_lower().contains(q)
 	)
 
 func save_score(song_title: String, score: int, perfect: int, good: int, miss: int):

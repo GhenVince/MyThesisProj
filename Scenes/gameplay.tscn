@@ -140,10 +140,10 @@ layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 225.0
-offset_top = 79.0
-offset_right = 225.0
-offset_bottom = 79.0
+offset_left = 43.0
+offset_top = 267.0
+offset_right = 43.0
+offset_bottom = 267.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_wbxth")
@@ -197,8 +197,10 @@ script = ExtResource("5_rlidi")
 
 [node name="PitchGraph" type="Control" parent="."]
 anchors_preset = 0
-offset_right = 1152.0
-offset_bottom = 648.0
+offset_left = -29.0
+offset_top = 89.0
+offset_right = 1123.0
+offset_bottom = 737.0
 script = SubResource("GDScript_r8bcl")
 
 [node name="ReferenceLine" type="Line2D" parent="PitchGraph"]

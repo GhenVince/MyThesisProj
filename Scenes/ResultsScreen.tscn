@@ -1,6 +1,10 @@
-[gd_scene load_steps=2 format=3 uid="uid://dwrv36hsr4pgf"]
+[gd_scene load_steps=4 format=3 uid="uid://dwrv36hsr4pgf"]
 
 [ext_resource type="Script" uid="uid://rmct3ykfwi5l" path="res://ResultsScreen.gd" id="1_sjmnu"]
+[ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="2_3nlhs"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_jxlxw"]
+bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -10,3 +14,59 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_sjmnu")
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_jxlxw")
+
+[node name="Title" type="Label" parent="UI"]
+layout_mode = 1
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -351.0
+offset_top = 79.0
+offset_right = 351.0
+offset_bottom = 149.0
+grow_horizontal = 2
+theme_override_fonts/font = ExtResource("2_3nlhs")
+theme_override_font_sizes/font_size = 69
+text = "Karaoke Game"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI"]
+layout_mode = 0
+offset_left = 227.0
+offset_top = 166.0
+offset_right = 920.0
+offset_bottom = 594.0
+
+[node name="Topbar" type="HBoxContainer" parent="UI/VBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="UI/VBoxContainer/Topbar"]
+layout_mode = 2
+
+[node name="FilterOption" type="OptionButton" parent="UI/VBoxContainer/Topbar"]
+layout_mode = 2
+
+[node name="SortOption" type="OptionButton" parent="UI/VBoxContainer/Topbar"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/VBoxContainer"]
+layout_mode = 2
+
+[node name="LeaderboardList" type="VBoxContainer" parent="UI/VBoxContainer/ScrollContainer"]
+layout_mode = 2
