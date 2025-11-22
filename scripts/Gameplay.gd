@@ -3,13 +3,12 @@ extends Control
 
 @onready var pitch_display = $UI/PitchDisplay
 @onready var lyrics_label = $UI/BottomPanel/LyricsLabel
-@onready var score_label = $UI/Panel/ScoreLabel
-@onready var accuracy_label = $UI/Panel/AccuracyLabel
+@onready var score_label = $UI/TopPanel/ScoreLabel
+@onready var accuracy_label = $UI/TopPanel/AccuracyLabel
 @onready var audio_player = $UI/AudioPlayer
 @onready var vocal_player = $UI/VocalPlayer
 @onready var pause_menu = $UI/PauseMenu
 @onready var countdown_label = $UI/CountdownLabel
-
 
 var pitch_detector: Node
 var spectral_analyzer: Node
@@ -44,12 +43,32 @@ func _ready():
 	setup_audio()
 	setup_pitch_detection()
 	
+	# DEBUG: Check audio setup
+	print("\n=== Audio Setup Debug ===")
+	var record_bus_idx = AudioServer.get_bus_index("Record")
+	print("Record bus index: ", record_bus_idx)
+	
+	if record_bus_idx == -1:
+		print("❌ ERROR: 'Record' bus not found!")
+		print("Creating it now...")
+	else:
+		print("✓ Record bus exists")
+		print("Effect count: ", AudioServer.get_bus_effect_count(record_bus_idx))
+	
+	# Rest of code...
+	
+	
 	pause_menu.hide()
 	countdown_label.hide()
 	
 	start_countdown()
 
 func setup_pitch_detection():
+	# Don't create if already exists
+	if pitch_detector:
+		print("Pitch detector already exists, reusing it")
+		return
+	
 	pitch_detector = load("res://scripts/YINPitchDetector.gd").new()
 	add_child(pitch_detector)
 	
@@ -121,6 +140,14 @@ func _process(delta):
 	
 	# Detect player pitch
 	var frequency = pitch_detector.detect_pitch()
+	
+	# DEBUG: Show detection status every second
+	if int(current_time) != int(current_time - delta):
+		if frequency > 0:
+			print("✓ Pitch detected: %.2f Hz" % frequency)
+		else:
+			print("⚠ No pitch detected - speak/sing into microphone!")
+	
 	if frequency > 0:
 		var note_data = pitch_detector.get_note_with_cents(frequency)
 		update_pitch_display(note_data)

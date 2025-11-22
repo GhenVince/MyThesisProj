@@ -1,0 +1,60 @@
+[gd_scene load_steps=2 format=3 uid="uid://cglcen1iewy40"]
+
+[sub_resource type="GDScript" id="GDScript_pxtwu"]
+script/source = "# MicTest.gd
+# Create a new scene, add a Node, attach this script, run it
+extends Node
+
+var audio_effect_capture: AudioEffectCapture
+
+func _ready():
+	print(\"\\n=== MICROPHONE TEST ===\")
+	
+	# Setup audio bus
+	var bus_idx = AudioServer.get_bus_index(\"Record\")
+	if bus_idx == -1:
+		bus_idx = AudioServer.bus_count
+		AudioServer.add_bus(bus_idx)
+		AudioServer.set_bus_name(bus_idx, \"Record\")
+		print(\"Created Record bus at index: \", bus_idx)
+	
+	# Add capture effect
+	audio_effect_capture = AudioEffectCapture.new()
+	AudioServer.add_bus_effect(bus_idx, audio_effect_capture)
+	
+	print(\"Audio effect added\")
+	print(\"Speak into your microphone...\")
+	print(\"Monitoring audio levels for 5 seconds...\\n\")
+
+func _process(_delta):
+	if not audio_effect_capture:
+		return
+	
+	if audio_effect_capture.can_get_buffer(1024):
+		var buffer = audio_effect_capture.get_buffer(1024)
+		
+		# Calculate volume
+		var sum = 0.0
+		for frame in buffer:
+			sum += abs(frame.x) + abs(frame.y)
+		var avg = sum / (buffer.size() * 2.0)
+		
+		# Print volume bar
+		var bar_length = int(avg * 100)
+		var bar = \"█\".repeat(bar_length)
+		print(\"Volume: \", bar, \" (\", avg, \")\")
+	
+	# Quit after 5 seconds
+	if get_tree().get_process_frames() > 300:
+		print(\"\\n✓ Test complete\")
+		get_tree().quit()
+"
+
+[node name="Control" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = SubResource("GDScript_pxtwu")

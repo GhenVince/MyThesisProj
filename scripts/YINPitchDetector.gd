@@ -20,10 +20,29 @@ func setup_audio_capture():
 		idx = AudioServer.bus_count
 		AudioServer.add_bus(idx)
 		AudioServer.set_bus_name(idx, "Record")
+		print("Created Record bus at index: ", idx)
 	
+	# Enable microphone input on this bus
+	var input_device = AudioServer.get_input_device()
+	print("Current input device: ", input_device)
+	
+	# Create and configure capture effect
 	audio_effect_capture = AudioEffectCapture.new()
 	audio_effect_capture.buffer_length = 0.1
 	AudioServer.add_bus_effect(idx, audio_effect_capture)
+	
+	print("AudioEffectCapture added to bus ", idx)
+	print("Capture buffer length: ", audio_effect_capture.buffer_length)
+	
+	# CRITICAL: Enable input on the bus
+	AudioServer.set_bus_send(idx, "Master")
+	
+	# Check if we can access the capture
+	await get_tree().create_timer(0.5).timeout
+	if audio_effect_capture.can_get_buffer(100):
+		print("✓ Audio capture is working!")
+	else:
+		print("⚠ Audio capture not receiving data")
 
 func get_frames() -> PackedVector2Array:
 	if audio_effect_capture and audio_effect_capture.can_get_buffer(BUFFER_SIZE):
@@ -38,14 +57,27 @@ func detect_pitch() -> float:
 	# Convert stereo to mono
 	var mono_buffer = PackedFloat32Array()
 	mono_buffer.resize(frames.size())
+	
+	var max_amplitude = 0.0
 	for i in frames.size():
 		mono_buffer[i] = (frames[i].x + frames[i].y) / 2.0
+		max_amplitude = max(max_amplitude, abs(mono_buffer[i]))
+	
+	# Lower threshold for quiet signals (was 0.01, now 0.001)
+	if max_amplitude < 0.001:
+		return 0.0
+	
+	# Apply gain to boost quiet signals
+	if max_amplitude < 0.05:
+		var gain = 3.0  # Boost quiet signals
+		for i in mono_buffer.size():
+			mono_buffer[i] *= gain
 	
 	return yin_algorithm(mono_buffer)
 
 func yin_algorithm(samples: PackedFloat32Array) -> float:
 	var buffer_size = samples.size()
-	var half_buffer = buffer_size / 2
+	var half_buffer = int(buffer_size / 2.0)
 	
 	# Step 1: Calculate difference function
 	var difference = PackedFloat32Array()
@@ -125,12 +157,12 @@ func get_note_with_cents(frequency: float) -> Dictionary:
 	var half_steps = round(half_steps_float)
 	var cents = (half_steps_float - half_steps) * 100.0
 	
-	var octave = int(half_steps / 12)
+	var _octave = int(half_steps / 12.0)
 	var note_index = int(half_steps) % 12
 	
 	return {
 		"note": note_names[note_index],
-		"octave": octave,
+		"octave": _octave,
 		"cents": cents,
 		"frequency": frequency
 	}

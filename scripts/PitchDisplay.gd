@@ -14,7 +14,18 @@ var max_history: int = 100
 var note_lines: Dictionary = {}
 
 func _ready():
+	print("=== PitchDisplay Initialized ===")
+	print("Size: ", size)
+	print("Position: ", position)
+	print("Global Position: ", global_position)
+	
+	if size.x == 0 or size.y == 0:
+		push_error("PitchDisplay has zero size! Set Custom Minimum Size or anchors")
+	
 	create_note_lines()
+	
+	# Draw test line immediately to verify display works
+	queue_redraw()
 
 func create_note_lines():
 	var display_height = size.y

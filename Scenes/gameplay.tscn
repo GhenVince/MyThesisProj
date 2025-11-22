@@ -10,6 +10,7 @@ bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
 
 [node name="Gameplay" type="Control"]
 layout_mode = 3
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
