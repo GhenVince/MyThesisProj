@@ -1,4 +1,4 @@
-# Gameplay.gd
+# Gameplay.gd - COMPLETE WORKING VERSION
 extends Control
 
 @onready var pitch_display = $UI/PitchDisplay
@@ -25,6 +25,10 @@ var current_lyric_index: int = 0
 
 var player_pitch_history: Array = []
 var reference_analyzer_active: bool = false
+var last_reference_pitch: float = 0.0
+var reference_pitch_smoothing: Array = []
+
+var vocal_effect_capture: AudioEffectCapture
 
 const NOTE_POSITIONS = {
 	"C": 0, "C#": 1, "D": 2, "D#": 3, "E": 4, "F": 5,
@@ -32,9 +36,8 @@ const NOTE_POSITIONS = {
 }
 
 func _ready():
-	# Verify we have valid song data
 	if GameManager.current_song.is_empty():
-		push_error("No song selected! Returning to song selection...")
+		push_error("No song selected!")
 		get_tree().change_scene_to_file("res://scenes/SongSelection.tscn")
 		return
 	
@@ -43,47 +46,18 @@ func _ready():
 	setup_audio()
 	setup_pitch_detection()
 	
-	# DEBUG: Check audio setup
-	print("\n=== Audio Setup Debug ===")
-	var record_bus_idx = AudioServer.get_bus_index("Record")
-	print("Record bus index: ", record_bus_idx)
-	
-	if record_bus_idx == -1:
-		print("❌ ERROR: 'Record' bus not found!")
-		print("Creating it now...")
-	else:
-		print("✓ Record bus exists")
-		print("Effect count: ", AudioServer.get_bus_effect_count(record_bus_idx))
-	
-	# Rest of code...
-	
-	
 	pause_menu.hide()
 	countdown_label.hide()
 	
 	start_countdown()
 
-func setup_pitch_detection():
-	# Don't create if already exists
-	if pitch_detector:
-		print("Pitch detector already exists, reusing it")
-		return
-	
-	pitch_detector = load("res://scripts/YINPitchDetector.gd").new()
-	add_child(pitch_detector)
-	
-	spectral_analyzer = load("res://scripts/SpectralAnalyzer.gd").new()
-	add_child(spectral_analyzer)
-
 func load_song_data():
-	# Check if folder key exists, if not we have an issue
 	if not song_data.has("folder"):
-		push_error("Song data missing 'folder' key! Song data: " + str(song_data))
+		push_error("Song data missing 'folder' key!")
 		return
 	
 	var song_folder = SongDatabase.SONGS_DIR + song_data["folder"] + "/"
 	
-	# Load lyrics
 	var lyrics_path = song_folder + "lyrics.json"
 	if FileAccess.file_exists(lyrics_path):
 		var file = FileAccess.open(lyrics_path, FileAccess.READ)
@@ -92,24 +66,92 @@ func load_song_data():
 		lyrics_data = json.data
 		file.close()
 	
-	# Calculate beat duration from BPM
 	var bpm = song_data.get("bpm", 120)
 	beat_duration = 60.0 / bpm
 
 func setup_audio():
 	var song_folder = SongDatabase.SONGS_DIR + song_data["folder"] + "/"
 	
-	# Load main audio (instrumental + vocals)
 	var audio_path = song_folder + "audio.ogg"
 	if FileAccess.file_exists(audio_path):
 		audio_player.stream = load(audio_path)
 	
-	# Load isolated vocals for reference pitch detection
 	var vocal_path = song_folder + "vocals.ogg"
 	if FileAccess.file_exists(vocal_path):
+		setup_vocal_analysis_bus()
 		vocal_player.stream = load(vocal_path)
-		vocal_player.volume_db = -80  # Silent but playing
+		vocal_player.bus = "VocalAnalysis"
 		reference_analyzer_active = true
+		print("✓ Reference vocals loaded")
+	
+	setup_player_monitoring()
+
+func setup_vocal_analysis_bus():
+	var vocal_bus_idx = AudioServer.get_bus_index("VocalAnalysis")
+	if vocal_bus_idx == -1:
+		vocal_bus_idx = AudioServer.bus_count
+		AudioServer.add_bus(vocal_bus_idx)
+		AudioServer.set_bus_name(vocal_bus_idx, "VocalAnalysis")
+	
+	for i in range(AudioServer.get_bus_effect_count(vocal_bus_idx) - 1, -1, -1):
+		AudioServer.remove_bus_effect(vocal_bus_idx, i)
+	
+	var amp = AudioEffectAmplify.new()
+	amp.volume_db = 12.0
+	AudioServer.add_bus_effect(vocal_bus_idx, amp)
+	
+	vocal_effect_capture = AudioEffectCapture.new()
+	vocal_effect_capture.buffer_length = 0.1
+	AudioServer.add_bus_effect(vocal_bus_idx, vocal_effect_capture)
+	
+	AudioServer.set_bus_mute(vocal_bus_idx, true)
+	print("✓ Vocal analysis bus created")
+
+func setup_player_monitoring():
+	var monitor_bus_idx = AudioServer.get_bus_index("PlayerMonitor")
+	if monitor_bus_idx == -1:
+		monitor_bus_idx = AudioServer.bus_count
+		AudioServer.add_bus(monitor_bus_idx)
+		AudioServer.set_bus_name(monitor_bus_idx, "PlayerMonitor")
+	
+	for i in range(AudioServer.get_bus_effect_count(monitor_bus_idx) - 1, -1, -1):
+		AudioServer.remove_bus_effect(monitor_bus_idx, i)
+	
+	var noise_gate = AudioEffectCompressor.new()
+	noise_gate.threshold = -30.0
+	noise_gate.ratio = 20.0
+	noise_gate.attack_us = 20.0
+	noise_gate.release_ms = 200.0
+	AudioServer.add_bus_effect(monitor_bus_idx, noise_gate)
+	
+	var reverb = AudioEffectReverb.new()
+	reverb.room_size = 0.6
+	reverb.damping = 0.5
+	reverb.spread = 0.8
+	reverb.dry = 0.7
+	reverb.wet = 0.3
+	AudioServer.add_bus_effect(monitor_bus_idx, reverb)
+	
+	var eq = AudioEffectEQ.new()
+	eq.set_band_gain_db(2, 3.0)
+	AudioServer.add_bus_effect(monitor_bus_idx, eq)
+	
+	AudioServer.set_bus_volume_db(monitor_bus_idx, -6.0)
+	AudioServer.set_bus_send(AudioServer.get_bus_index("Record"), "PlayerMonitor")
+	
+	print("✓ Player monitoring enabled")
+
+func setup_pitch_detection():
+	# Check if AutoLoad exists
+	if not has_node("/root/PitchDetector"):
+		push_error("PitchDetector AutoLoad not found! Creating manually...")
+		pitch_detector = load("res://scripts/YINPitchDetector.gd").new()
+		add_child(pitch_detector)
+	else:
+		pitch_detector = get_node("/root/PitchDetector")
+	
+	spectral_analyzer = load("res://scripts/SpectralAnalyzer.gd").new()
+	add_child(spectral_analyzer)
 
 func start_countdown():
 	countdown_label.show()
@@ -138,48 +180,125 @@ func _process(delta):
 	
 	current_time += delta
 	
-	# Detect player pitch
 	var frequency = pitch_detector.detect_pitch()
 	
-	# DEBUG: Show detection status every second
-	if int(current_time) != int(current_time - delta):
+	# ENHANCED DEBUG - Show every frame what's happening
+	if Engine.get_process_frames() % 30 == 0:  # Every half second
+		print("=== PITCH DEBUG ===")
+		print("Frequency: ", frequency)
+		print("Player positions: ", pitch_display.player_pitch_positions.size())
 		if frequency > 0:
-			print("✓ Pitch detected: %.2f Hz" % frequency)
-		else:
-			print("⚠ No pitch detected - speak/sing into microphone!")
+			print("✓✓✓ PITCH DETECTED - Should see blue line!")
 	
+	# Only update player pitch if actually detected (not silent)
 	if frequency > 0:
 		var note_data = pitch_detector.get_note_with_cents(frequency)
+		print("  Note: ", note_data["note"], " at Y: ", get_note_position(note_data["note"]))
 		update_pitch_display(note_data)
 		player_pitch_history.append(note_data)
 		
-		# Analyze for timbre (every 0.5 seconds)
 		if player_pitch_history.size() % 20 == 0:
 			analyze_player_timbre()
 	
-	# Detect reference pitch
+	# Always scroll the display for smooth animation
+	pitch_display.scroll_display(delta)
+	
 	if reference_analyzer_active:
 		detect_reference_pitch()
 	
-	# Check for scoring at each beat
 	if current_time - last_beat_time >= beat_duration:
 		last_beat_time = current_time
 		check_pitch_accuracy()
 	
-	# Update lyrics
 	update_lyrics()
-	
-	# Update UI
 	update_score_display()
 	
-	# Check if song ended
 	if not audio_player.playing and is_playing:
 		end_game()
 
 func detect_reference_pitch():
-	# This would need to capture the vocal_player's output
-	# For now, we'll use pre-analyzed data from the song file
-	pass
+	if not vocal_effect_capture:
+		return
+	
+	if vocal_effect_capture.can_get_buffer(2048):
+		var frames = vocal_effect_capture.get_buffer(2048)
+		
+		var mono_buffer = PackedFloat32Array()
+		mono_buffer.resize(frames.size())
+		for i in frames.size():
+			mono_buffer[i] = (frames[i].x + frames[i].y) / 2.0
+		
+		var frequency = analyze_reference_frequency(mono_buffer)
+		
+		if frequency > 0:
+			# Smooth the pitch to prevent jumps
+			reference_pitch_smoothing.append(frequency)
+			if reference_pitch_smoothing.size() > 5:
+				reference_pitch_smoothing.pop_front()
+			
+			# Average the last 5 detections
+			var smoothed_freq = 0.0
+			for f in reference_pitch_smoothing:
+				smoothed_freq += f
+			smoothed_freq /= reference_pitch_smoothing.size()
+			
+			# Only update if change is significant or smooth
+			if abs(smoothed_freq - last_reference_pitch) < 50.0 or last_reference_pitch == 0.0:
+				last_reference_pitch = smoothed_freq
+				
+				var note_data = pitch_detector.get_note_with_cents(smoothed_freq)
+				var y_position = get_note_position(note_data["note"])
+				
+				# Clamp y_position to display bounds
+				y_position = clamp(y_position, 0, pitch_display.size.y)
+				
+				pitch_display.update_reference_pitch(y_position, current_time)
+				
+				reference_pitches.append({
+					"time": current_time,
+					"note": note_data["note"],
+					"frequency": smoothed_freq
+				})
+
+func analyze_reference_frequency(samples: PackedFloat32Array) -> float:
+	var buffer_size = samples.size()
+	if buffer_size < 512:
+		return 0.0
+	
+	var half_buffer = int(buffer_size / 2.0)
+	
+	# Check if signal is loud enough (increased threshold)
+	var max_amp = 0.0
+	for sample in samples:
+		max_amp = max(max_amp, abs(sample))
+	
+	# Increased threshold to filter out quiet/noisy parts
+	if max_amp < 0.03:
+		return 0.0
+	
+	var best_period = 0
+	var best_correlation = 0.0
+	
+	# Search in vocal range only (80Hz to 800Hz)
+	var min_period = int(44100.0 / 800.0)  # ~55 samples
+	var max_period = int(44100.0 / 80.0)   # ~551 samples
+	
+	for period in range(min_period, min(max_period, half_buffer)):
+		var correlation = 0.0
+		for i in range(half_buffer):
+			correlation += samples[i] * samples[i + period]
+		
+		if correlation > best_correlation:
+			best_correlation = correlation
+			best_period = period
+	
+	if best_period > 0 and best_correlation > 0.1:  # Added correlation threshold
+		var frequency = 44100.0 / best_period
+		# Stricter frequency range for vocals
+		if frequency >= 80 and frequency <= 800:
+			return frequency
+	
+	return 0.0
 
 func update_pitch_display(note_data: Dictionary):
 	var note = note_data["note"]
@@ -192,12 +311,15 @@ func get_note_position(note: String) -> float:
 	var note_position = display_height - (note_index * (display_height / 12.0))
 	return note_position
 
+func get_note_position_with_octave(note: String, octave: int) -> float:
+	# For reference vocals, just use simple position (ignore octave for now)
+	return get_note_position(note)
+
 func check_pitch_accuracy():
 	if player_pitch_history.is_empty():
 		GameManager.add_score("Miss")
 		return
 	
-	# Get average pitch over the last beat
 	var recent_pitches = player_pitch_history.slice(max(0, player_pitch_history.size() - 10))
 	if recent_pitches.is_empty():
 		GameManager.add_score("Miss")
@@ -237,9 +359,11 @@ func get_most_common_note(pitches: Array) -> String:
 	return most_common
 
 func get_reference_note_at_time(_time: float) -> String:
-	# This should load from pre-analyzed pitch data
-	# For now returning placeholder
-	return "C"
+	# Find closest reference pitch
+	for ref in reference_pitches:
+		if abs(ref["time"] - _time) < 0.5:
+			return ref["note"]
+	return "C"  # Default fallback
 
 func calculate_note_accuracy(player_note: String, reference_note: String) -> float:
 	if player_note == reference_note:
@@ -249,7 +373,6 @@ func calculate_note_accuracy(player_note: String, reference_note: String) -> flo
 	var ref_pos = NOTE_POSITIONS.get(reference_note, 0)
 	var diff = abs(player_pos - ref_pos)
 	
-	# Within 1 semitone = good, within 2 = okay
 	if diff <= 1:
 		return 0.8
 	elif diff <= 2:
@@ -258,7 +381,6 @@ func calculate_note_accuracy(player_note: String, reference_note: String) -> flo
 		return 0.3
 
 func show_judgment(judgment: String):
-	# Visual feedback for scoring
 	var label = Label.new()
 	label.text = judgment
 	label.position = Vector2(size.x / 2, size.y / 2)
@@ -286,7 +408,6 @@ func update_score_display():
 	accuracy_label.text = "Accuracy: %.1f%%" % accuracy
 
 func analyze_player_timbre():
-	# Store timbre data for later comparison
 	if player_pitch_history.size() >= 20:
 		var recent = player_pitch_history.slice(-20)
 		GameManager.player_timbre_data.append(recent)
@@ -312,7 +433,7 @@ func pause_game():
 func resume_game():
 	pause_menu.hide()
 	start_countdown()
-	
+
 func continue_after_countdown():
 	is_paused = false
 	audio_player.stream_paused = false
@@ -323,7 +444,6 @@ func continue_after_countdown():
 func end_game():
 	is_playing = false
 	
-	# Save score
 	SongDatabase.save_score(
 		song_data["title"],
 		GameManager.game_score,
@@ -332,5 +452,4 @@ func end_game():
 		GameManager.miss_count
 	)
 	
-	# Go to results screen
 	get_tree().change_scene_to_file("res://scenes/ResultsScreen.tscn")

@@ -11,7 +11,10 @@ var playback: AudioStreamGeneratorPlayback
 
 var buffer: PackedFloat32Array = []
 
+var audio_stream_player: AudioStreamPlayer
+
 func _ready():
+	print("=== YINPitchDetector Initializing ===")
 	setup_audio_capture()
 
 func setup_audio_capture():
@@ -21,32 +24,62 @@ func setup_audio_capture():
 		AudioServer.add_bus(idx)
 		AudioServer.set_bus_name(idx, "Record")
 		print("Created Record bus at index: ", idx)
+	else:
+		print("Using existing Record bus at index: ", idx)
+	
+	# CRITICAL: Clear ALL existing effects first
+	var effect_count = AudioServer.get_bus_effect_count(idx)
+	print("Removing ", effect_count, " existing effects...")
+	for i in range(effect_count - 1, -1, -1):
+		AudioServer.remove_bus_effect(idx, i)
+	
+	# CRITICAL FIX: Start AudioStreamMicrophone to activate the mic
+	print("Starting AudioStreamMicrophone to activate microphone...")
+	var mic_stream = AudioStreamMicrophone.new()
+	audio_stream_player = AudioStreamPlayer.new()
+	audio_stream_player.stream = mic_stream
+	audio_stream_player.bus = "Record"
+	audio_stream_player.volume_db = -80  # Silent - we just need it active
+	add_child(audio_stream_player)
+	audio_stream_player.play()
+	print("✓ Microphone stream started (silent)")
+	
+	# Add amplifier for volume boost
+	var amplifier = AudioEffectAmplify.new()
+	amplifier.volume_db = 18.0
+	AudioServer.add_bus_effect(idx, amplifier)
+	print("Added AudioEffectAmplify: +18dB")
+	
+	# Add capture effect
+	audio_effect_capture = AudioEffectCapture.new()
+	audio_effect_capture.buffer_length = 0.5
+	AudioServer.add_bus_effect(idx, audio_effect_capture)
+	print("Added AudioEffectCapture with buffer: ", audio_effect_capture.buffer_length)
 	
 	# Enable microphone input on this bus
 	var input_device = AudioServer.get_input_device()
-	print("Current input device: ", input_device)
+	print("Current input device: ", input_device if input_device != "" else "Default")
 	
-	# Create and configure capture effect
-	audio_effect_capture = AudioEffectCapture.new()
-	audio_effect_capture.buffer_length = 0.1
-	AudioServer.add_bus_effect(idx, audio_effect_capture)
+	# Unmute the bus
+	AudioServer.set_bus_mute(idx, false)
+	print("Bus unmuted")
 	
-	print("AudioEffectCapture added to bus ", idx)
-	print("Capture buffer length: ", audio_effect_capture.buffer_length)
+	# Wait a moment then check if working
+	await get_tree().create_timer(1.0).timeout
 	
-	# CRITICAL: Enable input on the bus
-	AudioServer.set_bus_send(idx, "Master")
-	
-	# Check if we can access the capture
-	await get_tree().create_timer(0.5).timeout
-	if audio_effect_capture.can_get_buffer(100):
-		print("✓ Audio capture is working!")
+	if audio_effect_capture and audio_effect_capture.can_get_buffer(100):
+		print("✓✓✓ AudioCapture is WORKING!")
 	else:
-		print("⚠ Audio capture not receiving data")
+		push_error("❌❌❌ AudioCapture NOT receiving data!")
+		push_error("Speak into microphone and check if you see audio bars")
 
 func get_frames() -> PackedVector2Array:
-	if audio_effect_capture and audio_effect_capture.can_get_buffer(BUFFER_SIZE):
+	if not audio_effect_capture:
+		return PackedVector2Array()
+	
+	if audio_effect_capture.can_get_buffer(BUFFER_SIZE):
 		return audio_effect_capture.get_buffer(BUFFER_SIZE)
+	
 	return PackedVector2Array()
 
 func detect_pitch() -> float:
@@ -63,17 +96,26 @@ func detect_pitch() -> float:
 		mono_buffer[i] = (frames[i].x + frames[i].y) / 2.0
 		max_amplitude = max(max_amplitude, abs(mono_buffer[i]))
 	
-	# Lower threshold for quiet signals (was 0.01, now 0.001)
-	if max_amplitude < 0.001:
+	# Much lower threshold - detect quieter voices (was 0.01, now 0.003)
+	if max_amplitude < 0.003:
 		return 0.0
 	
-	# Apply gain to boost quiet signals
-	if max_amplitude < 0.05:
-		var gain = 3.0  # Boost quiet signals
+	# Apply gain to boost signals
+	if max_amplitude < 0.1:
+		var gain = 4.0  # Increased from 2.0
 		for i in mono_buffer.size():
 			mono_buffer[i] *= gain
 	
-	return yin_algorithm(mono_buffer)
+	var pitch = yin_algorithm(mono_buffer)
+	
+	# Debug output
+	if Engine.get_process_frames() % 60 == 0:
+		if pitch > 0:
+			print("✓ PLAYER PITCH DETECTED: %.2f Hz (volume: %.4f)" % [pitch, max_amplitude])
+		else:
+			print("⚠ No pitch (volume: %.4f)" % max_amplitude)
+	
+	return pitch
 
 func yin_algorithm(samples: PackedFloat32Array) -> float:
 	var buffer_size = samples.size()

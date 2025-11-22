@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://coxp4ud4btiva"]
 
-[ext_resource type="Script" uid="uid://cnk2upyf5bxeu" path="res://Scenes/MicrophoneTest.gd" id="1_1wsdo"]
+[ext_resource type="Script" uid="uid://cnk2upyf5bxeu" path="res://Scenes/TestMicStreamingf.gd" id="1_q182p"]
 
 [node name="Control" type="Control"]
 layout_mode = 3
@@ -9,4 +9,4 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_1wsdo")
+script = ExtResource("1_q182p")
