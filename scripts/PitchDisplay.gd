@@ -48,7 +48,11 @@ func create_note_lines():
 
 func update_player_pitch(y_position: float, _note: String):
 	# Add to the right edge
-	player_pitch_positions.append(Vector2(size.x, y_position))
+	var new_pos = Vector2(size.x, y_position)
+	player_pitch_positions.append(new_pos)
+	
+	# DEBUG
+	print("PitchDisplay: Added player position at Y=", y_position, " Total positions: ", player_pitch_positions.size())
 	
 	# Keep only recent history
 	if player_pitch_positions.size() > max_history:
