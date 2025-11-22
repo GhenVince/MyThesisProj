@@ -1,0 +1,96 @@
+[gd_scene load_steps=7 format=3 uid="uid://ljj8s6ahq0w6"]
+
+[ext_resource type="Script" uid="uid://cp0gdy6j5pyvf" path="res://Scenes/SongButton.gd" id="1_6v22e"]
+[ext_resource type="Script" uid="uid://bbw7imwd5awqj" path="res://scripts/SongSelectButton.gd" id="1_p42nj"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_p42nj"]
+bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_6v22e"]
+bg_color = Color(1.97336e-06, 0.296936, 0.422803, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_xycb6"]
+bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_size = 5
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_dqwmu"]
+
+[node name="SongButton" type="PanelContainer"]
+offset_right = 40.0
+offset_bottom = 40.0
+script = ExtResource("1_6v22e")
+
+[node name="Songselectbtn1" type="Button" parent="."]
+visible = false
+custom_minimum_size = Vector2(900, 85)
+layout_mode = 2
+size_flags_stretch_ratio = 0.0
+mouse_filter = 1
+theme_override_styles/normal = SubResource("StyleBoxFlat_p42nj")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_6v22e")
+theme_override_styles/hover = SubResource("StyleBoxFlat_xycb6")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_dqwmu")
+script = ExtResource("1_p42nj")
+
+[node name="MarginContainer" type="MarginContainer" parent="."]
+layout_mode = 2
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MarginContainer"]
+custom_minimum_size = Vector2(550, 0)
+layout_mode = 2
+
+[node name="AlbumArt" type="TextureRect" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 30
+text = "Akala"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="ArtistLabel" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "by Parokya Ni Edgar"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="GenreLabel" type="Label" parent="MarginContainer/HBoxContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DurationLabel" type="Label" parent="MarginContainer/HBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[connection signal="mouse_entered" from="." to="." method="_on_mouse_entered"]
+[connection signal="mouse_exited" from="." to="." method="_on_mouse_exited"]
+[connection signal="pressed" from="Songselectbtn1" to="Songselectbtn1" method="_on_pressed"]

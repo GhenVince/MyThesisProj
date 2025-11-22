@@ -28,6 +28,7 @@ func load_songs():
 func load_song_data(song_folder: String) -> Dictionary:
 	var config_path = SONGS_DIR + song_folder + "/song.json"
 	if not FileAccess.file_exists(config_path):
+		push_error("Song config not found: " + config_path)
 		return {}
 	
 	var file = FileAccess.open(config_path, FileAccess.READ)
@@ -38,8 +39,11 @@ func load_song_data(song_folder: String) -> Dictionary:
 		var error = json.parse(json_string)
 		if error == OK:
 			var data = json.data
+			# IMPORTANT: Add the folder name to the song data
 			data["folder"] = song_folder
 			return data
+		else:
+			push_error("JSON parse error in " + config_path + ": " + json.get_error_message())
 	return {}
 
 func get_songs_by_genre(genre: String) -> Array:

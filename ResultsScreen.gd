@@ -1,4 +1,3 @@
-# ResultsScreen.gd
 extends Control
 
 @onready var total_score_label = $Panel/VBoxContainer/TotalScore

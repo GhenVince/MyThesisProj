@@ -33,7 +33,7 @@ func create_note_lines():
 		
 		note_lines[note_name] = y_pos
 
-func update_player_pitch(y_position: float, note: String):
+func update_player_pitch(y_position: float, _note: String):
 	player_pitch_positions.append(Vector2(size.x, y_position))
 	
 	# Keep only recent history

@@ -1,56 +1,20 @@
-[gd_scene load_steps=11 format=3 uid="uid://13jqm4n3t5u5"]
+[gd_scene load_steps=6 format=3 uid="uid://13jqm4n3t5u5"]
 
-[ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="1_hf1ha"]
-[ext_resource type="Script" uid="uid://wj2vrrvbhvd6" path="res://Assets/scripts/Gameplay.gd" id="1_wbxth"]
-[ext_resource type="Script" uid="uid://cdtngb1vbtyrw" path="res://Assets/scripts/PitchDisplay.gd" id="2_kwrm5"]
-[ext_resource type="PackedScene" uid="uid://cn8wtgg1hfr17" path="res://Scenes/pause_menu.tscn" id="5_r8bcl"]
-[ext_resource type="Script" uid="uid://csaae3clactam" path="res://Scenes/back.gd" id="5_rlidi"]
+[ext_resource type="Script" uid="uid://wj2vrrvbhvd6" path="res://scripts/Gameplay.gd" id="1_ovofm"]
+[ext_resource type="Script" uid="uid://cdtngb1vbtyrw" path="res://scripts/PitchDisplay.gd" id="2_mofsa"]
+[ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="3_u8j7u"]
+[ext_resource type="PackedScene" uid="uid://cn8wtgg1hfr17" path="res://Scenes/PauseMenu.tscn" id="4_xwjbm"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wbxth"]
 bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rlidi"]
-bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-shadow_size = 5
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_1qnfl"]
-bg_color = Color(1.97336e-06, 0.296936, 0.422803, 1)
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-shadow_size = 5
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_urrcd"]
-bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-corner_radius_top_left = 10
-corner_radius_top_right = 10
-corner_radius_bottom_right = 10
-corner_radius_bottom_left = 10
-shadow_size = 5
-
-[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_puebw"]
-
 [node name="Gameplay" type="Control"]
 layout_mode = 3
-anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_wbxth")
+script = ExtResource("1_ovofm")
 
 [node name="UI" type="Control" parent="."]
 layout_mode = 1
@@ -60,7 +24,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Panel" type="Panel" parent="UI"]
+[node name="TopPanel" type="Panel" parent="UI"]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -69,7 +33,7 @@ grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_wbxth")
 
-[node name="ScoreLabel" type="Label" parent="UI/Panel"]
+[node name="ScoreLabel" type="Label" parent="UI/TopPanel"]
 layout_mode = 1
 offset_left = 20.0
 offset_top = 161.0
@@ -78,7 +42,7 @@ offset_bottom = 195.0
 theme_override_font_sizes/font_size = 24
 text = "Score: 0"
 
-[node name="AccuracyLabel" type="Label" parent="UI/Panel"]
+[node name="AccuracyLabel" type="Label" parent="UI/TopPanel"]
 layout_mode = 1
 anchors_preset = 8
 anchor_left = 0.5
@@ -96,9 +60,11 @@ text = "Waiting...\""
 
 [node name="PitchDisplay" type="Control" parent="UI"]
 anchors_preset = 0
-offset_right = 40.0
-offset_bottom = 40.0
-script = ExtResource("2_kwrm5")
+offset_left = 101.0
+offset_top = 214.0
+offset_right = 1033.0
+offset_bottom = 511.0
+script = ExtResource("2_mofsa")
 
 [node name="BottomPanel" type="Panel" parent="UI"]
 layout_mode = 1
@@ -112,17 +78,6 @@ grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_wbxth")
 
 [node name="LyricsLabel" type="Label" parent="UI/BottomPanel"]
-layout_mode = 0
-offset_left = 11.0
-offset_top = 27.0
-offset_right = 1137.0
-offset_bottom = 96.0
-theme_override_font_sizes/font_size = 30
-text = "hi"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="LyricsLabel2" type="Label" parent="UI/BottomPanel"]
 layout_mode = 0
 offset_left = 11.0
 offset_top = 27.0
@@ -154,34 +109,18 @@ offset_top = 79.0
 offset_right = 351.0
 offset_bottom = 149.0
 grow_horizontal = 2
-theme_override_fonts/font = ExtResource("1_hf1ha")
+theme_override_fonts/font = ExtResource("3_u8j7u")
 theme_override_font_sizes/font_size = 69
 text = "Karaoke Game"
-
-[node name="Back" type="Button" parent="UI"]
-layout_mode = 0
-offset_left = 18.0
-offset_top = 17.0
-offset_right = 144.0
-offset_bottom = 62.0
-size_flags_horizontal = 3
-theme_override_font_sizes/font_size = 20
-theme_override_styles/normal = SubResource("StyleBoxFlat_rlidi")
-theme_override_styles/pressed = SubResource("StyleBoxFlat_1qnfl")
-theme_override_styles/hover = SubResource("StyleBoxFlat_urrcd")
-theme_override_styles/focus = SubResource("StyleBoxEmpty_puebw")
-text = "< Back"
-script = ExtResource("5_rlidi")
 
 [node name="AudioPlayer" type="AudioStreamPlayer" parent="UI"]
 
 [node name="VocalPlayer" type="AudioStreamPlayer" parent="UI"]
 
-[node name="PauseMenu" parent="UI" instance=ExtResource("5_r8bcl")]
+[node name="PauseMenu" parent="UI" instance=ExtResource("4_xwjbm")]
+visible = false
 layout_mode = 1
 offset_left = 10.0
 offset_top = 5.0
 offset_right = 10.0
 offset_bottom = 5.0
-
-[connection signal="pressed" from="UI/Back" to="UI/Back" method="_on_pressed"]

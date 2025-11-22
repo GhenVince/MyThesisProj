@@ -1,0 +1,165 @@
+[gd_scene load_steps=20 format=3 uid="uid://c3d6wmma86oth"]
+
+[ext_resource type="Script" uid="uid://deulh4m1x733x" path="res://Scenes/SongSelection.gd" id="1_08xu2"]
+[ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="2_rupj2"]
+[ext_resource type="PackedScene" uid="uid://ljj8s6ahq0w6" path="res://Scenes/SongButton.tscn" id="4_08xu2"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y0f0h"]
+bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_y0f0h"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_hjcgt"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_1lfv0"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_0b3ay"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_g42s2"]
+
+[sub_resource type="Theme" id="Theme_bbmjn"]
+VScrollBar/styles/grabber = SubResource("StyleBoxEmpty_y0f0h")
+VScrollBar/styles/grabber_highlight = SubResource("StyleBoxEmpty_hjcgt")
+VScrollBar/styles/grabber_pressed = SubResource("StyleBoxEmpty_1lfv0")
+VScrollBar/styles/scroll = SubResource("StyleBoxEmpty_0b3ay")
+VScrollBar/styles/scroll_focus = SubResource("StyleBoxEmpty_g42s2")
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bv5xc"]
+bg_color = Color(7.02709e-06, 0.546868, 0.762121, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_y6b83"]
+bg_color = Color(1.97336e-06, 0.296936, 0.422803, 1)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_size = 5
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ssw7t"]
+bg_color = Color(4.18738e-06, 0.397837, 0.55979, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+shadow_size = 5
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_3p3aq"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_iwmk6"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_bbmjn"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_sr4km"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_p5buf"]
+
+[sub_resource type="Theme" id="Theme_3p3aq"]
+VScrollBar/styles/grabber = SubResource("StyleBoxEmpty_iwmk6")
+VScrollBar/styles/grabber_highlight = SubResource("StyleBoxEmpty_bbmjn")
+VScrollBar/styles/grabber_pressed = SubResource("StyleBoxEmpty_sr4km")
+VScrollBar/styles/scroll = SubResource("StyleBoxEmpty_p5buf")
+
+[node name="SongSelection" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_08xu2")
+
+[node name="SongSelection" type="Node" parent="."]
+
+[node name="UI" type="Control" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Panel" type="Panel" parent="UI"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 1.0
+offset_right = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_y0f0h")
+
+[node name="SelectSongLbl" type="Label" parent="UI"]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -375.5
+offset_top = -277.0
+offset_right = 375.5
+offset_bottom = -207.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_fonts/font = ExtResource("2_rupj2")
+theme_override_font_sizes/font_size = 69
+text = "Select A song"
+
+[node name="VBoxContainer" type="VBoxContainer" parent="UI"]
+layout_mode = 0
+offset_left = 293.0
+offset_top = 176.0
+offset_right = 859.0
+offset_bottom = 647.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme = SubResource("Theme_bbmjn")
+theme_override_constants/separation = 3
+
+[node name="Topbar" type="HBoxContainer" parent="UI/VBoxContainer"]
+layout_mode = 2
+
+[node name="BackButton" type="Button" parent="UI/VBoxContainer/Topbar"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_bv5xc")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_y6b83")
+theme_override_styles/hover = SubResource("StyleBoxFlat_ssw7t")
+theme_override_styles/focus = SubResource("StyleBoxEmpty_3p3aq")
+text = "< Back"
+
+[node name="SearchBar" type="LineEdit" parent="UI/VBoxContainer/Topbar"]
+custom_minimum_size = Vector2(300, 40)
+layout_mode = 2
+text = "Search Song..."
+
+[node name="GenreFilter" type="OptionButton" parent="UI/VBoxContainer/Topbar"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="UI/VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+theme = SubResource("Theme_3p3aq")
+
+[node name="SongList" type="VBoxContainer" parent="UI/VBoxContainer/ScrollContainer"]
+layout_mode = 2
+
+[node name="SongButton" parent="UI/VBoxContainer/ScrollContainer/SongList" instance=ExtResource("4_08xu2")]
+layout_mode = 2
+
+[node name="PreviewPlayer" type="AudioStreamPlayer" parent="UI/VBoxContainer"]
