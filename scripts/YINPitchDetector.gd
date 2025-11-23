@@ -2,16 +2,13 @@
 extends Node
 
 const SAMPLE_RATE = 44100
-const BUFFER_SIZE = 2048
+const BUFFER_SIZE = 1024
 const THRESHOLD = 0.15
 
 var audio_effect_capture: AudioEffectCapture
-var recording_effect: AudioEffectRecord
-var playback: AudioStreamGeneratorPlayback
-
-var buffer: PackedFloat32Array = []
-
 var audio_stream_player: AudioStreamPlayer
+var pitch_history: Array = []
+var last_pitch: float = 0.0
 
 func _ready():
 	print("=== YINPitchDetector Initializing ===")
@@ -27,51 +24,51 @@ func setup_audio_capture():
 	else:
 		print("Using existing Record bus at index: ", idx)
 	
-	# CRITICAL: Clear ALL existing effects first
 	var effect_count = AudioServer.get_bus_effect_count(idx)
 	print("Removing ", effect_count, " existing effects...")
 	for i in range(effect_count - 1, -1, -1):
 		AudioServer.remove_bus_effect(idx, i)
 	
-	# CRITICAL FIX: Start AudioStreamMicrophone to activate the mic
-	print("Starting AudioStreamMicrophone to activate microphone...")
+	print("Starting AudioStreamMicrophone for capture...")
 	var mic_stream = AudioStreamMicrophone.new()
 	audio_stream_player = AudioStreamPlayer.new()
 	audio_stream_player.stream = mic_stream
 	audio_stream_player.bus = "Record"
-	audio_stream_player.volume_db = -80  # Silent - we just need it active
+	audio_stream_player.volume_db = -80
 	add_child(audio_stream_player)
 	audio_stream_player.play()
 	print("✓ Microphone stream started (silent)")
 	
-	# Add amplifier for volume boost
 	var amplifier = AudioEffectAmplify.new()
-	amplifier.volume_db = 18.0
+	amplifier.volume_db = 30.0
 	AudioServer.add_bus_effect(idx, amplifier)
-	print("Added AudioEffectAmplify: +18dB")
+	print("Added AudioEffectAmplify: +30dB")
 	
-	# Add capture effect
 	audio_effect_capture = AudioEffectCapture.new()
 	audio_effect_capture.buffer_length = 0.5
 	AudioServer.add_bus_effect(idx, audio_effect_capture)
 	print("Added AudioEffectCapture with buffer: ", audio_effect_capture.buffer_length)
 	
-	# Enable microphone input on this bus
-	var input_device = AudioServer.get_input_device()
-	print("Current input device: ", input_device if input_device != "" else "Default")
-	
-	# Unmute the bus
 	AudioServer.set_bus_mute(idx, false)
 	print("Bus unmuted")
 	
-	# Wait a moment then check if working
 	await get_tree().create_timer(1.0).timeout
 	
 	if audio_effect_capture and audio_effect_capture.can_get_buffer(100):
 		print("✓✓✓ AudioCapture is WORKING!")
+		
+		var test_frames = audio_effect_capture.get_buffer(100)
+		var volume = 0.0
+		for frame in test_frames:
+			volume += abs(frame.x) + abs(frame.y)
+		volume = volume / (test_frames.size() * 2.0) if test_frames.size() > 0 else 0.0
+		print("Current volume level: ", volume)
+		if volume < 0.001:
+			print("⚠ Volume very low - speak into microphone!")
+		else:
+			print("✓ Good volume level!")
 	else:
 		push_error("❌❌❌ AudioCapture NOT receiving data!")
-		push_error("Speak into microphone and check if you see audio bars")
 
 func get_frames() -> PackedVector2Array:
 	if not audio_effect_capture:
@@ -79,15 +76,16 @@ func get_frames() -> PackedVector2Array:
 	
 	if audio_effect_capture.can_get_buffer(BUFFER_SIZE):
 		return audio_effect_capture.get_buffer(BUFFER_SIZE)
+	elif audio_effect_capture.can_get_buffer(512):
+		return audio_effect_capture.get_buffer(512)
 	
 	return PackedVector2Array()
 
 func detect_pitch() -> float:
 	var frames = get_frames()
-	if frames.size() < BUFFER_SIZE:
+	if frames.size() < 512:
 		return 0.0
 	
-	# Convert stereo to mono
 	var mono_buffer = PackedFloat32Array()
 	mono_buffer.resize(frames.size())
 	
@@ -96,24 +94,40 @@ func detect_pitch() -> float:
 		mono_buffer[i] = (frames[i].x + frames[i].y) / 2.0
 		max_amplitude = max(max_amplitude, abs(mono_buffer[i]))
 	
-	# Much lower threshold - detect quieter voices (was 0.01, now 0.003)
-	if max_amplitude < 0.003:
+	if max_amplitude < 0.0005:
 		return 0.0
 	
-	# Apply gain to boost signals
-	if max_amplitude < 0.1:
-		var gain = 4.0  # Increased from 2.0
-		for i in mono_buffer.size():
-			mono_buffer[i] *= gain
+	var gain = 10.0
+	for i in mono_buffer.size():
+		mono_buffer[i] *= gain
 	
 	var pitch = yin_algorithm(mono_buffer)
 	
-	# Debug output
-	if Engine.get_process_frames() % 60 == 0:
-		if pitch > 0:
-			print("✓ PLAYER PITCH DETECTED: %.2f Hz (volume: %.4f)" % [pitch, max_amplitude])
+	# DEBUG: Show actual detected frequency
+	if pitch > 0 and Engine.get_process_frames() % 30 == 0:
+		print("Detected: %.1f Hz (%s)" % [pitch, frequency_to_note(pitch)])
+	
+	# Smooth the pitch MORE aggressively
+	if pitch > 0:
+		pitch_history.append(pitch)
+		if pitch_history.size() > 5:  # Increased from 3 to 5
+			pitch_history.pop_front()
+		
+		var smoothed = 0.0
+		for p in pitch_history:
+			smoothed += p
+		smoothed /= pitch_history.size()
+		
+		# Stricter jump rejection (was 100 Hz, now 50 Hz)
+		if last_pitch == 0.0 or abs(smoothed - last_pitch) < 50.0:
+			last_pitch = smoothed
+			pitch = smoothed
 		else:
-			print("⚠ No pitch (volume: %.4f)" % max_amplitude)
+			# Reject jump, keep previous pitch
+			pitch = last_pitch
+	else:
+		pitch_history.clear()
+		last_pitch = 0.0
 	
 	return pitch
 
@@ -121,7 +135,6 @@ func yin_algorithm(samples: PackedFloat32Array) -> float:
 	var buffer_size = samples.size()
 	var half_buffer = int(buffer_size / 2.0)
 	
-	# Step 1: Calculate difference function
 	var difference = PackedFloat32Array()
 	difference.resize(half_buffer)
 	difference.fill(0.0)
@@ -131,7 +144,6 @@ func yin_algorithm(samples: PackedFloat32Array) -> float:
 			var delta = samples[i] - samples[i + tau]
 			difference[tau] += delta * delta
 	
-	# Step 2: Cumulative mean normalized difference
 	var cmnd = PackedFloat32Array()
 	cmnd.resize(half_buffer)
 	cmnd[0] = 1.0
@@ -144,30 +156,36 @@ func yin_algorithm(samples: PackedFloat32Array) -> float:
 		else:
 			cmnd[tau] = difference[tau] / (running_sum / tau)
 	
-	# Step 3: Absolute threshold
-	var tau = 1
-	while tau < half_buffer:
-		if cmnd[tau] < THRESHOLD:
-			while tau + 1 < half_buffer and cmnd[tau + 1] < cmnd[tau]:
-				tau += 1
-			break
-		tau += 1
+	# Find the absolute minimum (best period)
+	var best_tau = 2
+	var best_value = cmnd[2]
 	
-	if tau >= half_buffer - 1:
+	# Search range for human voice (80-800 Hz)
+	var min_tau = int(SAMPLE_RATE / 800.0)  # ~55 samples
+	var max_tau = int(SAMPLE_RATE / 80.0)   # ~551 samples
+	
+	for tau in range(max(2, min_tau), min(half_buffer, max_tau)):
+		if cmnd[tau] < best_value:
+			best_value = cmnd[tau]
+			best_tau = tau
+	
+	# Only accept if below threshold
+	if best_value > THRESHOLD:
 		return 0.0
 	
-	# Step 4: Parabolic interpolation
-	var better_tau = tau
-	if tau > 0 and tau < half_buffer - 1:
-		var s0 = cmnd[tau - 1]
-		var s1 = cmnd[tau]
-		var s2 = cmnd[tau + 1]
-		better_tau = tau + (s2 - s0) / (2 * (2 * s1 - s2 - s0))
+	# Parabolic interpolation
+	var better_tau = best_tau
+	if best_tau > 0 and best_tau < half_buffer - 1:
+		var s0 = cmnd[best_tau - 1]
+		var s1 = cmnd[best_tau]
+		var s2 = cmnd[best_tau + 1]
+		var denominator = 2 * (2 * s1 - s2 - s0)
+		if abs(denominator) > 0.0001:
+			better_tau = best_tau + (s2 - s0) / denominator
 	
-	# Convert tau to frequency
 	var frequency = SAMPLE_RATE / better_tau
 	
-	# Filter out unrealistic frequencies
+	# Singing range - wider for deeper voices
 	if frequency < 80 or frequency > 1000:
 		return 0.0
 	

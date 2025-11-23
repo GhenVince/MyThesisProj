@@ -36,6 +36,13 @@ const NOTE_POSITIONS = {
 }
 
 func _ready():
+	# DEBUG: Print note arrangement
+	print("\n=== NOTE ARRANGEMENT (bottom to top) ===")
+	for i in range(12):
+		var notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
+		print(i, ": ", notes[i])
+	print("=======================================\n")
+	
 	if GameManager.current_song.is_empty():
 		push_error("No song selected!")
 		get_tree().change_scene_to_file("res://scenes/SongSelection.tscn")
@@ -182,18 +189,16 @@ func _process(delta):
 	
 	var frequency = pitch_detector.detect_pitch()
 	
-	# ENHANCED DEBUG - Show every frame what's happening
-	if Engine.get_process_frames() % 30 == 0:  # Every half second
-		print("=== PITCH DEBUG ===")
-		print("Frequency: ", frequency)
-		print("Player positions: ", pitch_display.player_pitch_positions.size())
+	# DEBUG: Check if detecting
+	if Engine.get_process_frames() % 60 == 0:
 		if frequency > 0:
-			print("✓✓✓ PITCH DETECTED - Should see blue line!")
+			print("✓ Player detected: %.1f Hz" % frequency)
+		else:
+			print("⚠ No player pitch detected")
 	
 	# Only update player pitch if actually detected (not silent)
 	if frequency > 0:
 		var note_data = pitch_detector.get_note_with_cents(frequency)
-		print("  Note: ", note_data["note"], " at Y: ", get_note_position(note_data["note"]))
 		update_pitch_display(note_data)
 		player_pitch_history.append(note_data)
 		
@@ -302,10 +307,48 @@ func analyze_reference_frequency(samples: PackedFloat32Array) -> float:
 
 func update_pitch_display(note_data: Dictionary):
 	var note = note_data["note"]
-	var position_y = get_note_position(note)
+	var frequency = note_data["frequency"]
+	var octave = note_data["octave"]
+	
+	# Use frequency-based positioning for accuracy
+	var position_y = get_position_from_frequency(frequency)
+	
+	# DEBUG
+	if Engine.get_process_frames() % 30 == 0:
+		var in_bounds = position_y >= 0 and position_y <= pitch_display.size.y
+		print("Pitch: %.1f Hz → %s%d → Y: %.1f %s" % [frequency, note, octave, position_y, "✓" if in_bounds else "❌ OUT OF BOUNDS"])
+	
 	pitch_display.update_player_pitch(position_y, note)
 
+func get_position_from_frequency(frequency: float) -> float:
+	if frequency <= 0:
+		return pitch_display.size.y / 2.0
+	
+	var display_height = pitch_display.size.y
+	
+	# Map frequency range to display height
+	# Low frequency (80 Hz) = bottom of screen (high Y value)
+	# High frequency (800 Hz) = top of screen (low Y value)
+	
+	var min_freq = 80.0
+	var max_freq = 800.0
+	
+	# Clamp frequency to our range
+	frequency = clamp(frequency, min_freq, max_freq)
+	
+	# Calculate position (inverted because Y=0 is top)
+	# normalized = 0.0 (80 Hz) should give Y = display_height (bottom)
+	# normalized = 1.0 (800 Hz) should give Y = 0 (top)
+	var normalized = (frequency - min_freq) / (max_freq - min_freq)
+	var y_position = display_height * (1.0 - normalized)  # FIXED: Inverted the calculation
+	
+	# Clamp to display bounds with margin
+	y_position = clamp(y_position, 10, display_height - 10)
+	
+	return y_position
+
 func get_note_position(note: String) -> float:
+	# Keep this for reference pitch detection
 	var note_index = NOTE_POSITIONS.get(note, 0)
 	var display_height = pitch_display.size.y
 	var note_position = display_height - (note_index * (display_height / 12.0))

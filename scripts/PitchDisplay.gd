@@ -33,8 +33,14 @@ func create_note_lines():
 	var display_height = size.y
 	var note_spacing = display_height / 12.0
 	
-	for i in range(12):
+	# Create lines from BOTTOM to TOP (C at bottom, B at top)
+	for i in range(13):  # 0-12 to include both ends
+		if i >= 12:
+			continue
+			
 		var note_name = NOTE_NAMES[i]
+		# Y position: 0 = top of screen, display_height = bottom
+		# We want C at BOTTOM, B at TOP
 		var y_pos = display_height - (i * note_spacing)
 		
 		# Create label for note name
@@ -42,17 +48,21 @@ func create_note_lines():
 		label.text = note_name
 		label.position = Vector2(5, y_pos - 10)
 		label.add_theme_color_override("font_color", Color.WHITE)
+		label.add_theme_font_size_override("font_size", 14)
 		add_child(label)
 		
 		note_lines[note_name] = y_pos
+		
+		# DEBUG: Print note positions
+		print("Note ", note_name, " at Y=", y_pos)
 
 func update_player_pitch(y_position: float, _note: String):
+	# Clamp to display bounds (roof and floor limits)
+	y_position = clamp(y_position, 0, size.y)
+	
 	# Add to the right edge
 	var new_pos = Vector2(size.x, y_position)
 	player_pitch_positions.append(new_pos)
-	
-	# DEBUG
-	print("PitchDisplay: Added player position at Y=", y_position, " Total positions: ", player_pitch_positions.size())
 	
 	# Keep only recent history
 	if player_pitch_positions.size() > max_history:
@@ -61,6 +71,9 @@ func update_player_pitch(y_position: float, _note: String):
 	queue_redraw()
 
 func update_reference_pitch(y_position: float, time: float):
+	# Clamp to display bounds (roof and floor limits)
+	y_position = clamp(y_position, 0, size.y)
+	
 	# Add reference pitch to the right edge
 	reference_pitch_positions.append(Vector2(size.x, y_position))
 	
@@ -104,20 +117,18 @@ func _draw():
 		for i in range(reference_pitch_positions.size() - 1):
 			var p1 = reference_pitch_positions[i]
 			var p2 = reference_pitch_positions[i + 1]
-			# Only draw if within screen bounds
 			if p1.x >= 0 and p2.x <= size.x:
 				draw_line(p1, p2, NOTE_COLORS["reference"], 3.0)
 	
-	# Draw player pitch line (scrolls from right to left)
+	# Draw player pitch line
 	if player_pitch_positions.size() > 1:
 		for i in range(player_pitch_positions.size() - 1):
 			var p1 = player_pitch_positions[i]
 			var p2 = player_pitch_positions[i + 1]
-			# Only draw if within screen bounds
 			if p1.x >= 0 and p2.x <= size.x:
 				draw_line(p1, p2, NOTE_COLORS["player"], 4.0)
 		
-		# Draw current position indicator at the "now" line
+		# Draw current position indicator
 		if player_pitch_positions.size() > 0:
 			var last_pos = player_pitch_positions[-1]
 			if last_pos.x >= 0 and last_pos.x <= size.x:
