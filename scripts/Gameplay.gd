@@ -326,21 +326,19 @@ func get_position_from_frequency(frequency: float) -> float:
 	
 	var display_height = pitch_display.size.y
 	
-	# Map frequency range to display height
-	# Low frequency (80 Hz) = bottom of screen (high Y value)
-	# High frequency (800 Hz) = top of screen (low Y value)
-	
-	var min_freq = 80.0
-	var max_freq = 800.0
+	# Narrower frequency range = notes closer together, more visible
+	# Typical singing range: 100-500 Hz (covers about 2 octaves)
+	var min_freq = 100.0  # Was 80
+	var max_freq = 500.0  # Was 800
 	
 	# Clamp frequency to our range
 	frequency = clamp(frequency, min_freq, max_freq)
 	
-	# Calculate position (inverted because Y=0 is top)
-	# normalized = 0.0 (80 Hz) should give Y = display_height (bottom)
-	# normalized = 1.0 (800 Hz) should give Y = 0 (top)
+	# Calculate position
+	# 100 Hz (low) → bottom (high Y)
+	# 500 Hz (high) → top (low Y)
 	var normalized = (frequency - min_freq) / (max_freq - min_freq)
-	var y_position = display_height * (1.0 - normalized)  # FIXED: Inverted the calculation
+	var y_position = display_height * (1.0 - normalized)
 	
 	# Clamp to display bounds with margin
 	y_position = clamp(y_position, 10, display_height - 10)

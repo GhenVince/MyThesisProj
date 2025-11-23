@@ -64,6 +64,10 @@ func update_player_pitch(y_position: float, _note: String):
 	var new_pos = Vector2(size.x, y_position)
 	player_pitch_positions.append(new_pos)
 	
+	# DEBUG
+	if player_pitch_positions.size() % 10 == 0:
+		print("  → PitchDisplay received Y=%.1f, added position, total: %d" % [y_position, player_pitch_positions.size()])
+	
 	# Keep only recent history
 	if player_pitch_positions.size() > max_history:
 		player_pitch_positions.pop_front()
@@ -103,16 +107,25 @@ func scroll_display(delta: float):
 	queue_redraw()
 
 func _draw():
-	# Draw note lines
-	for note in note_lines.keys():
-		var y = note_lines[note]
-		draw_line(Vector2(0, y), Vector2(size.x, y), Color(0.3, 0.3, 0.3, 0.5), 1.0)
+	# Draw note lines for 2 octaves
+	var display_height = size.y
+	var note_spacing = display_height / float(note_range)
 	
-	# Draw current pitch indicator line (vertical line showing "now")
-	var current_x = size.x * 0.2  # 20% from left edge
+	for i in range(note_range + 1):
+		var y = display_height - (i * note_spacing)
+		var color = Color(0.3, 0.3, 0.3, 0.5)
+		
+		# Make C notes brighter as octave markers
+		if i % 12 == 0:
+			color = Color(0.6, 0.6, 0.6, 0.8)
+		
+		draw_line(Vector2(0, y), Vector2(size.x, y), color, 1.0)
+	
+	# Draw current pitch indicator line
+	var current_x = size.x * 0.2
 	draw_line(Vector2(current_x, 0), Vector2(current_x, size.y), Color(1, 1, 1, 0.3), 2.0)
 	
-	# Draw reference pitch line (ahead of current position)
+	# Draw reference pitch line
 	if reference_pitch_positions.size() > 1:
 		for i in range(reference_pitch_positions.size() - 1):
 			var p1 = reference_pitch_positions[i]
@@ -120,19 +133,19 @@ func _draw():
 			if p1.x >= 0 and p2.x <= size.x:
 				draw_line(p1, p2, NOTE_COLORS["reference"], 3.0)
 	
-	# Draw player pitch line
+	# Draw player pitch line - THICK and VISIBLE
 	if player_pitch_positions.size() > 1:
 		for i in range(player_pitch_positions.size() - 1):
 			var p1 = player_pitch_positions[i]
 			var p2 = player_pitch_positions[i + 1]
 			if p1.x >= 0 and p2.x <= size.x:
-				draw_line(p1, p2, NOTE_COLORS["player"], 4.0)
+				draw_line(p1, p2, NOTE_COLORS["player"], 6.0)
 		
 		# Draw current position indicator
 		if player_pitch_positions.size() > 0:
 			var last_pos = player_pitch_positions[-1]
 			if last_pos.x >= 0 and last_pos.x <= size.x:
-				draw_circle(last_pos, 6.0, NOTE_COLORS["player"])
+				draw_circle(last_pos, 10.0, NOTE_COLORS["player"])
 
 func clear():
 	player_pitch_positions.clear()
