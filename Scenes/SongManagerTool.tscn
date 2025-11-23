@@ -1,0 +1,227 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tools/SongManagerTool.gd" id="1"]
+
+[node name="SongManagerTool" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1")
+
+[node name="Panel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 20.0
+offset_top = 20.0
+offset_right = -20.0
+offset_bottom = -20.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="Panel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBox" type="VBoxContainer" parent="Panel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 15
+
+[node name="Title" type="Label" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+text = "Karaoke Song Manager"
+horizontal_alignment = 1
+theme_override_font_sizes/font_size = 24
+
+[node name="BasicInfo" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+text = "Basic Information"
+theme_override_font_sizes/font_size = 18
+
+[node name="TitleLabel" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+text = "Song Title:"
+
+[node name="TitleEdit" type="LineEdit" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+placeholder_text = "Enter song title..."
+
+[node name="ArtistLabel" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+text = "Artist:"
+
+[node name="ArtistEdit" type="LineEdit" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+placeholder_text = "Enter artist name..."
+
+[node name="GenreLabel" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+text = "Genre:"
+
+[node name="GenreEdit" type="LineEdit" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+placeholder_text = "e.g., Pop, Rock, Jazz..."
+
+[node name="BPMLabel" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+text = "BPM (Beats Per Minute):"
+
+[node name="BPMSpin" type="SpinBox" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+min_value = 40.0
+max_value = 200.0
+value = 120.0
+
+[node name="DifficultyLabel" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+text = "Difficulty (1-5):"
+
+[node name="DifficultySpin" type="SpinBox" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+min_value = 1.0
+max_value = 5.0
+value = 3.0
+
+[node name="DurationLabel" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+text = "Duration (MM:SS):"
+
+[node name="DurationEdit" type="LineEdit" parent="Panel/ScrollContainer/VBox/BasicInfo"]
+layout_mode = 2
+placeholder_text = "e.g., 3:45"
+
+[node name="Files" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+text = "Audio Files"
+theme_override_font_sizes/font_size = 18
+
+[node name="AudioLabel" type="Label" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+text = "Main Audio File (Required):"
+
+[node name="AudioHBox" type="HBoxContainer" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+
+[node name="AudioPath" type="Label" parent="Panel/ScrollContainer/VBox/Files/AudioHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "No file selected"
+
+[node name="BrowseAudioBtn" type="Button" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+text = "Browse Audio File..."
+
+[node name="VocalLabel" type="Label" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+text = "Isolated Vocals (Optional, for reference pitch):"
+
+[node name="VocalHBox" type="HBoxContainer" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+
+[node name="VocalPath" type="Label" parent="Panel/ScrollContainer/VBox/Files/VocalHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "No file selected"
+
+[node name="BrowseVocalBtn" type="Button" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+text = "Browse Vocal File..."
+
+[node name="CoverLabel" type="Label" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+text = "Cover Image (Optional):"
+
+[node name="CoverHBox" type="HBoxContainer" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+
+[node name="CoverPath" type="Label" parent="Panel/ScrollContainer/VBox/Files/CoverHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "No file selected"
+
+[node name="BrowseCoverBtn" type="Button" parent="Panel/ScrollContainer/VBox/Files"]
+layout_mode = 2
+text = "Browse Cover Image..."
+
+[node name="Lyrics" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Panel/ScrollContainer/VBox/Lyrics"]
+layout_mode = 2
+text = "Lyrics"
+theme_override_font_sizes/font_size = 18
+
+[node name="LyricsHelp" type="Label" parent="Panel/ScrollContainer/VBox/Lyrics"]
+layout_mode = 2
+text = "Enter lyrics with timestamps [0.0] First line or plain text (auto-timed)"
+autowrap_mode = 3
+
+[node name="LyricsTextEdit" type="TextEdit" parent="Panel/ScrollContainer/VBox/Lyrics"]
+custom_minimum_size = Vector2(0, 200)
+layout_mode = 2
+placeholder_text = "[0.0] First lyric line
+[5.5] Second lyric line
+[10.0] Third lyric line"
+
+[node name="LyricsButtons" type="HBoxContainer" parent="Panel/ScrollContainer/VBox/Lyrics"]
+layout_mode = 2
+
+[node name="ParseLyricsBtn" type="Button" parent="Panel/ScrollContainer/VBox/Lyrics/LyricsButtons"]
+layout_mode = 2
+text = "Help / Format Info"
+
+[node name="ClearLyricsBtn" type="Button" parent="Panel/ScrollContainer/VBox/Lyrics/LyricsButtons"]
+layout_mode = 2
+text = "Clear Lyrics"
+
+[node name="Status" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+
+[node name="StatusLabel" type="Label" parent="Panel/ScrollContainer/VBox/Status"]
+layout_mode = 2
+text = "Ready"
+autowrap_mode = 3
+
+[node name="ProgressBar" type="ProgressBar" parent="Panel/ScrollContainer/VBox/Status"]
+layout_mode = 2
+max_value = 100.0
+
+[node name="Actions" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
+layout_mode = 2
+
+[node name="CreateSongBtn" type="Button" parent="Panel/ScrollContainer/VBox/Actions"]
+layout_mode = 2
+text = "CREATE SONG"
+theme_override_font_sizes/font_size = 20
+
+[node name="ButtonsHBox" type="HBoxContainer" parent="Panel/ScrollContainer/VBox/Actions"]
+layout_mode = 2
+
+[node name="ClearFormBtn" type="Button" parent="Panel/ScrollContainer/VBox/Actions/ButtonsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Clear Form"
+
+[node name="OpenFolderBtn" type="Button" parent="Panel/ScrollContainer/VBox/Actions/ButtonsHBox"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Open Songs Folder"
