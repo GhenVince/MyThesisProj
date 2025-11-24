@@ -8,6 +8,7 @@ extends Control
 @onready var audio_player = $UI/AudioPlayer
 @onready var vocal_player = $UI/VocalPlayer
 @onready var pause_menu = $UI/PauseMenu
+@onready var options_menu_instance = null  # Will be loaded when needed
 @onready var countdown_label = $UI/CountdownLabel
 
 var pitch_detector: Node
@@ -515,11 +516,58 @@ func _on_pause_retry():
 
 func _on_pause_options():
 	"""Open options from pause menu"""
-	if ResourceLoader.exists("res://scenes/OptionsMenu.tscn"):
-		get_tree().change_scene_to_file("res://scenes/OptionsMenu.tscn")
-	else:
-		print("OptionsMenu.tscn not found!")
-		get_tree().paused = true
+	print("🎮 Opening options menu...")
+	
+	# Keep game paused
+	# (pause menu already set paused = true)
+	
+	# Hide pause menu
+	pause_menu.hide()
+	
+	# Check if OptionsMenu already loaded
+	if options_menu_instance == null:
+		# Check if OptionsMenu scene exists
+		if ResourceLoader.exists("res://scenes/OptionsMenu.tscn"):
+			# Load and instance OptionsMenu
+			var options_scene = load("res://scenes/OptionsMenu.tscn")
+			options_menu_instance = options_scene.instantiate()
+			
+			# Add to scene tree (as sibling to pause menu, under UI)
+			if has_node("UI"):
+				get_node("UI").add_child(options_menu_instance)
+			else:
+				add_child(options_menu_instance)
+			
+			# Connect close signal if it exists
+			if options_menu_instance.has_signal("closed"):
+				if not options_menu_instance.closed.is_connected(_on_options_closed):
+					options_menu_instance.closed.connect(_on_options_closed)
+				print("✓ Connected options closed signal")
+			
+			print("✓ Options menu loaded and added to scene")
+		else:
+			print("❌ OptionsMenu.tscn not found at res://scenes/OptionsMenu.tscn")
+			# Show pause menu again if options not found
+			pause_menu.show()
+			return
+	
+	# Show options menu
+	options_menu_instance.show()
+	print("✓ Options menu shown (game still paused)")
+
+func _on_options_closed():
+	"""When options menu closes, show pause menu again"""
+	print("🎮 Options closed, returning to pause menu...")
+	
+	# Hide options menu
+	if options_menu_instance:
+		options_menu_instance.hide()
+	
+	# Show pause menu again (game stays paused)
+	pause_menu.show()
+	print("✓ Returned to pause menu (still paused)")
+	print("OptionsMenu.tscn not found!")
+	get_tree().paused = true
 
 func _on_pause_exit():
 	"""Exit to main menu"""

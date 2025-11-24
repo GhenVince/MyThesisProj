@@ -37,14 +37,14 @@ func setup_voice_feedback():
 	for i in range(AudioServer.get_bus_effect_count(mic_bus_idx) - 1, -1, -1):
 		AudioServer.remove_bus_effect(mic_bus_idx, i)
 	
-	# 1. Noise Gate - Suppress background noise
+	# 1. Noise Gate - Suppress background noise AGGRESSIVELY
 	var noise_gate = AudioEffectCompressor.new()
-	noise_gate.threshold = -35.0  # Only let sound through above this level
-	noise_gate.ratio = 20.0       # Heavy compression below threshold
-	noise_gate.attack_us = 10.0   # Fast attack
-	noise_gate.release_ms = 100.0 # Smooth release
+	noise_gate.threshold = -25.0  # Much higher threshold (was -35, only loud sounds pass)
+	noise_gate.ratio = 30.0       # Very heavy compression below threshold (was 20)
+	noise_gate.attack_us = 1.0    # Instant attack (was 10)
+	noise_gate.release_ms = 50.0  # Fast release
 	AudioServer.add_bus_effect(mic_bus_idx, noise_gate)
-	print("✓ Added Noise Gate (-35 dB threshold)")
+	print("✓ Added STRONG Noise Gate (-25 dB threshold)")
 	
 	# 2. High-pass filter (remove low frequency noise)
 	var highpass = AudioEffectHighPassFilter.new()
@@ -81,8 +81,8 @@ func setup_voice_feedback():
 	mic_player = AudioStreamPlayer.new()
 	add_child(mic_player)
 	mic_player.bus = "MicProcessing"  # Use processing bus with noise suppression
-	mic_player.volume_db = 0.0  # Normal volume
-	print("✓ Created AudioStreamPlayer on MicProcessing (0 dB)")
+	mic_player.volume_db = -6.0  # Quieter (was 0.0)
+	print("✓ Created AudioStreamPlayer on MicProcessing (-6 dB)")
 	
 	# Create microphone stream
 	mic_stream = AudioStreamMicrophone.new()

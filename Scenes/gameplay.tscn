@@ -140,7 +140,6 @@ vertical_alignment = 1
 layout_mode = 1
 
 [node name="OptionsMenu" parent="UI" instance=ExtResource("4_mofsa")]
-visible = false
 layout_mode = 1
 
 [node name="PlayerVoiceFeedback" type="Node" parent="."]
