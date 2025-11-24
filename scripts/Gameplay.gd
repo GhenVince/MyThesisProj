@@ -402,10 +402,10 @@ func check_pitch_accuracy():
 	
 	var accuracy = calculate_note_accuracy(avg_note, reference_note)
 	
-	if accuracy >= 0.9:
+	if accuracy >= 0.7:  # More lenient (was 0.9)
 		GameManager.add_score("Perfect")
 		show_judgment("Perfect")
-	elif accuracy >= 0.6:
+	elif accuracy >= 0.4:  # More lenient (was 0.6)
 		GameManager.add_score("Good")
 		show_judgment("Good")
 	else:
@@ -435,18 +435,21 @@ func get_reference_note_at_time(_time: float) -> String:
 
 func calculate_note_accuracy(player_note: String, reference_note: String) -> float:
 	if player_note == reference_note:
-		return 1.0
+		return 1.0  # Perfect match
 	
 	var player_pos = NOTE_POSITIONS.get(player_note, 0)
 	var ref_pos = NOTE_POSITIONS.get(reference_note, 0)
 	var diff = abs(player_pos - ref_pos)
 	
-	if diff <= 1:
-		return 0.8
-	elif diff <= 2:
-		return 0.6
+	# More lenient scoring
+	if diff <= 1:  # 1 semitone off
+		return 0.9  # Still excellent (was 0.8)
+	elif diff <= 2:  # 2 semitones off
+		return 0.7  # Good (was 0.6)
+	elif diff <= 3:  # 3 semitones off
+		return 0.5  # Acceptable (new tier)
 	else:
-		return 0.3
+		return 0.2  # Miss (was 0.3)
 
 func show_judgment(judgment: String):
 	var label = Label.new()
@@ -566,8 +569,8 @@ func _on_options_closed():
 	# Show pause menu again (game stays paused)
 	pause_menu.show()
 	print("✓ Returned to pause menu (still paused)")
-	print("OptionsMenu.tscn not found!")
-	get_tree().paused = true
+		print("OptionsMenu.tscn not found!")
+		get_tree().paused = true
 
 func _on_pause_exit():
 	"""Exit to main menu"""

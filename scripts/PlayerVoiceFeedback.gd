@@ -81,8 +81,8 @@ func setup_voice_feedback():
 	mic_player = AudioStreamPlayer.new()
 	add_child(mic_player)
 	mic_player.bus = "MicProcessing"  # Use processing bus with noise suppression
-	mic_player.volume_db = -6.0  # Quieter (was 0.0)
-	print("✓ Created AudioStreamPlayer on MicProcessing (-6 dB)")
+	mic_player.volume_db = -3.0  # Comfortable volume (was -6.0)
+	print("✓ Created AudioStreamPlayer on MicProcessing (-3 dB)")
 	
 	# Create microphone stream
 	mic_stream = AudioStreamMicrophone.new()
