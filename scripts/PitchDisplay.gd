@@ -66,9 +66,8 @@ func setup_ui_labels():
 func _draw():
 	"""Draw the pitch display"""
 	draw_note_lines()
-	draw_pitch_zones()      # Draw zones first (background)
-	draw_reference_pitch()  # Then reference line/tail
-	draw_player_pitch()     # Then player line/tail (circles on top!)
+	draw_reference_pitch()  # Reference tail scrolls
+	draw_player_pitch()     # Player tail scrolls, circle stays right
 
 func _process(_delta):
 	queue_redraw()  # Godot 4.x uses queue_redraw() instead of update()
@@ -93,12 +92,12 @@ func update_player_pitch(y_position: float = 0.0, note: String = ""):
 		
 		# Update label
 		if player_note_label:
-			player_note_label.text = "" % [note, player_pitch]
+			player_note_label.text = "Player: %s (Y=%.1f)" % [note, player_pitch]
 	else:
 		player_note = ""
 		player_octave = 0
 		if player_note_label:
-			player_note_label.text = ""
+			player_note_label.text = "Player: --"
 
 func update_reference_pitch(y_position: float = 0.0, time: float = 0.0):
 	"""Update reference pitch (from vocals)"""
@@ -113,12 +112,12 @@ func update_reference_pitch(y_position: float = 0.0, time: float = 0.0):
 		
 		# Update label if you want to show something
 		if reference_note_label:
-			reference_note_label.text = "" % y_position
+			reference_note_label.text = "Target: Y=%.1f" % y_position
 	else:
 		reference_note = ""
 		reference_octave = 0
 		if reference_note_label:
-			reference_note_label.text = ""
+			reference_note_label.text = "Target: --"
 
 func set_note_range(min_octave: int, max_octave: int):
 	"""Set the display range for notes"""
@@ -170,7 +169,7 @@ func draw_note_lines():
 			)
 
 func draw_reference_pitch():
-	"""Draw the reference pitch line with tail (from vocals)"""
+	"""Draw the reference pitch with stationary circle on right, scrolling tail"""
 	if reference_pitch <= 0:
 		return
 	
@@ -179,7 +178,7 @@ func draw_reference_pitch():
 	# Clamp to display bounds
 	y_pos = clamp(y_pos, 0, size.y)
 	
-	# Draw reference history trail (tail effect)
+	# Draw reference history trail (tail scrolls from right to left)
 	if reference_history.size() > 1:
 		var trail_points = PackedVector2Array()
 		for i in range(reference_history.size()):
@@ -187,15 +186,13 @@ func draw_reference_pitch():
 			# Clamp trail Y positions
 			trail_y = clamp(trail_y, 0, size.y)
 			
-			# Calculate X position with scrolling
+			# Calculate X position: start from right edge, scroll left
 			var progress = float(i) / reference_history.size()
-			var x = size.x * (0.5 + progress * 0.5) - scroll_offset
+			var x = size.x - (scroll_offset * progress)  # Scrolls left from right edge
 			
-			# Wrap X position for continuous scrolling
-			while x < 0:
-				x += size.x
-			while x > size.x:
-				x -= size.x
+			# Stop drawing if off screen
+			if x < 0:
+				continue
 			
 			trail_points.append(Vector2(x, trail_y))
 		
@@ -206,17 +203,12 @@ func draw_reference_pitch():
 				var trail_color = Color(reference_color.r, reference_color.g, reference_color.b, alpha * 0.7)
 				draw_line(trail_points[i], trail_points[i + 1], trail_color, 3.0)
 	
-	# Draw current reference position circle
-	var x_pos = size.x * 0.75 - scroll_offset
-	while x_pos < 0:
-		x_pos += size.x
-	while x_pos > size.x:
-		x_pos -= size.x
-	
-	draw_circle(Vector2(x_pos, y_pos), 8.0, reference_color)
+	# Draw current reference position circle (STATIONARY on right edge)
+	var circle_x = size.x - 30  # Fixed position on right
+	draw_circle(Vector2(circle_x, y_pos), 10.0, reference_color)
 
 func draw_player_pitch():
-	"""Draw the player's current pitch with scrolling"""
+	"""Draw the player's pitch with stationary circle on right, scrolling tail"""
 	if player_pitch <= 0:
 		return
 	
@@ -225,7 +217,7 @@ func draw_player_pitch():
 	# Clamp to display bounds
 	y_pos = clamp(y_pos, 0, size.y)
 	
-	# Draw pitch history trail with scrolling
+	# Draw pitch history trail (tail scrolls from right to left)
 	if pitch_history.size() > 1:
 		var trail_points = PackedVector2Array()
 		for i in range(pitch_history.size()):
@@ -233,15 +225,13 @@ func draw_player_pitch():
 			# Clamp trail Y positions
 			trail_y = clamp(trail_y, 0, size.y)
 			
-			# Calculate X position with scrolling
+			# Calculate X position: start from right edge, scroll left
 			var progress = float(i) / pitch_history.size()
-			var x = size.x * (0.25 + progress * 0.25) - scroll_offset
+			var x = size.x - (scroll_offset * progress)  # Scrolls left from right edge
 			
-			# Wrap X position for continuous scrolling
-			while x < 0:
-				x += size.x
-			while x > size.x:
-				x -= size.x
+			# Stop drawing if off screen
+			if x < 0:
+				continue
 			
 			trail_points.append(Vector2(x, trail_y))
 		
@@ -252,14 +242,9 @@ func draw_player_pitch():
 				var trail_color = Color(player_color.r, player_color.g, player_color.b, alpha * 0.5)
 				draw_line(trail_points[i], trail_points[i + 1], trail_color, 3.0)
 	
-	# Draw main pitch indicator with scrolling
-	var x_pos = size.x * 0.5 - scroll_offset
-	while x_pos < 0:
-		x_pos += size.x
-	while x_pos > size.x:
-		x_pos -= size.x
-	
-	draw_circle(Vector2(x_pos, y_pos), 12.0, player_color)
+	# Draw main pitch indicator (STATIONARY on right edge)
+	var circle_x = size.x - 30  # Fixed position on right
+	draw_circle(Vector2(circle_x, y_pos), 14.0, player_color)
 
 func draw_pitch_zones():
 	"""Draw colored zones showing perfect/good hit areas"""

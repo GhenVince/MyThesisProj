@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://wj2vrrvbhvd6" path="res://scripts/Gameplay.gd" id="1"]
 [ext_resource type="Script" uid="uid://cdtngb1vbtyrw" path="res://scripts/PitchDisplay.gd" id="2"]
-[ext_resource type="PackedScene" uid="uid://cn8wtgg1hfr17" path="res://scenes/PauseMenu.tscn" id="3"]
+[ext_resource type="PackedScene" path="res://scenes/PauseMenu.tscn" id="3"]
 
 [node name="Gameplay" type="Control"]
 layout_mode = 3

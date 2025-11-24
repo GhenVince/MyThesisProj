@@ -152,6 +152,7 @@ theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
 text = "Exit"
 
 [node name="OptionsMenu" parent="UI" instance=ExtResource("3_8saeu")]
+visible = false
 layout_mode = 1
 offset_left = 18.0
 offset_top = -14.0

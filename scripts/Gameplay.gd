@@ -125,32 +125,49 @@ func setup_player_monitoring():
 		AudioServer.add_bus(monitor_bus_idx)
 		AudioServer.set_bus_name(monitor_bus_idx, "PlayerMonitor")
 	
+	# Clear any existing effects
 	for i in range(AudioServer.get_bus_effect_count(monitor_bus_idx) - 1, -1, -1):
 		AudioServer.remove_bus_effect(monitor_bus_idx, i)
 	
+	# 1. Noise Gate - Remove background noise
 	var noise_gate = AudioEffectCompressor.new()
-	noise_gate.threshold = -30.0
+	noise_gate.threshold = -35.0  # Lower threshold for better detection
 	noise_gate.ratio = 20.0
-	noise_gate.attack_us = 20.0
-	noise_gate.release_ms = 200.0
+	noise_gate.attack_us = 10.0   # Faster attack for less delay
+	noise_gate.release_ms = 100.0  # Faster release
 	AudioServer.add_bus_effect(monitor_bus_idx, noise_gate)
 	
+	# 2. Reverb - Karaoke effect!
 	var reverb = AudioEffectReverb.new()
-	reverb.room_size = 0.6
-	reverb.damping = 0.5
-	reverb.spread = 0.8
-	reverb.dry = 0.7
-	reverb.wet = 0.3
+	reverb.room_size = 0.8        # Larger room for karaoke feel
+	reverb.damping = 0.4          # Less damping = more echo
+	reverb.spread = 1.0           # Full stereo spread
+	reverb.dry = 0.6              # Original voice
+	reverb.wet = 0.4              # Reverb mix (karaoke effect!)
+	reverb.predelay_msec = 20.0   # Small predelay for depth
+	reverb.predelay_feedback = 0.4
 	AudioServer.add_bus_effect(monitor_bus_idx, reverb)
 	
+	# 3. EQ - Boost vocals
 	var eq = AudioEffectEQ.new()
-	eq.set_band_gain_db(2, 3.0)
+	eq.set_band_gain_db(0, -2.0)  # Cut low bass (80 Hz)
+	eq.set_band_gain_db(1, 0.0)   # Keep low-mids (250 Hz)
+	eq.set_band_gain_db(2, 4.0)   # Boost presence (800 Hz)
+	eq.set_band_gain_db(3, 3.0)   # Boost clarity (2.5 kHz)
+	eq.set_band_gain_db(4, -1.0)  # Slight cut on highs (8 kHz)
 	AudioServer.add_bus_effect(monitor_bus_idx, eq)
 	
-	AudioServer.set_bus_volume_db(monitor_bus_idx, -6.0)
+	# 4. Limiter - Prevent clipping and feedback
+	var limiter = AudioEffectLimiter.new()
+	limiter.threshold_db = -3.0
+	limiter.ceiling_db = -0.5
+	AudioServer.add_bus_effect(monitor_bus_idx, limiter)
+	
+	# Set volume and routing
+	AudioServer.set_bus_volume_db(monitor_bus_idx, -3.0)  # Slightly louder
 	AudioServer.set_bus_send(AudioServer.get_bus_index("Record"), "PlayerMonitor")
 	
-	print("✓ Player monitoring enabled")
+	print("✓ Player monitoring with reverb enabled")
 
 func setup_pitch_detection():
 	if not has_node("/root/PitchDetector"):
