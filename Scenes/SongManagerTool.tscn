@@ -1,6 +1,6 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=2 format=3 uid="uid://cqtwqo5ekem1b"]
 
-[ext_resource type="Script" path="res://tools/SongManagerTool.gd" id="1"]
+[ext_resource type="Script" uid="uid://dd3qqejvrbtxk" path="res://scripts/SongManagerTool.gd" id="1"]
 
 [node name="SongManagerTool" type="Control"]
 layout_mode = 3
@@ -42,17 +42,17 @@ theme_override_constants/separation = 15
 
 [node name="Title" type="Label" parent="Panel/ScrollContainer/VBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "Karaoke Song Manager"
 horizontal_alignment = 1
-theme_override_font_sizes/font_size = 24
 
 [node name="BasicInfo" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
 layout_mode = 2
 
 [node name="Label" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
 layout_mode = 2
-text = "Basic Information"
 theme_override_font_sizes/font_size = 18
+text = "Basic Information"
 
 [node name="TitleLabel" type="Label" parent="Panel/ScrollContainer/VBox/BasicInfo"]
 layout_mode = 2
@@ -111,8 +111,8 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="Panel/ScrollContainer/VBox/Files"]
 layout_mode = 2
-text = "Audio Files"
 theme_override_font_sizes/font_size = 18
+text = "Audio Files"
 
 [node name="AudioLabel" type="Label" parent="Panel/ScrollContainer/VBox/Files"]
 layout_mode = 2
@@ -167,8 +167,8 @@ layout_mode = 2
 
 [node name="Label" type="Label" parent="Panel/ScrollContainer/VBox/Lyrics"]
 layout_mode = 2
-text = "Lyrics"
 theme_override_font_sizes/font_size = 18
+text = "Lyrics"
 
 [node name="LyricsHelp" type="Label" parent="Panel/ScrollContainer/VBox/Lyrics"]
 layout_mode = 2
@@ -203,15 +203,14 @@ autowrap_mode = 3
 
 [node name="ProgressBar" type="ProgressBar" parent="Panel/ScrollContainer/VBox/Status"]
 layout_mode = 2
-max_value = 100.0
 
 [node name="Actions" type="VBoxContainer" parent="Panel/ScrollContainer/VBox"]
 layout_mode = 2
 
 [node name="CreateSongBtn" type="Button" parent="Panel/ScrollContainer/VBox/Actions"]
 layout_mode = 2
-text = "CREATE SONG"
 theme_override_font_sizes/font_size = 20
+text = "CREATE SONG"
 
 [node name="ButtonsHBox" type="HBoxContainer" parent="Panel/ScrollContainer/VBox/Actions"]
 layout_mode = 2

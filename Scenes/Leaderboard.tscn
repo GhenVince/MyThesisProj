@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://c3d6wmma86oth"]
+[gd_scene load_steps=2 format=3 uid="uid://cpr2s8bhc35jo"]
 
-[ext_resource type="Script" uid="uid://bd6dt1jmnhf6b" path="res://scripts/SongSelection.gd" id="1"]
+[ext_resource type="Script" uid="uid://cq7sc5cnrumkw" path="res://scripts/Leaderboard.gd" id="1"]
 
-[node name="SongSelection" type="Control"]
+[node name="Leaderboard" type="Control"]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -48,7 +48,7 @@ theme_override_constants/separation = 10
 [node name="Title" type="Label" parent="Panel/VBox"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 32
-text = "SELECT A SONG"
+text = "LEADERBOARD"
 horizontal_alignment = 1
 
 [node name="TopBar" type="HBoxContainer" parent="Panel/VBox"]
@@ -59,30 +59,51 @@ theme_override_constants/separation = 10
 layout_mode = 2
 text = "← Back"
 
-[node name="SearchBox" type="LineEdit" parent="Panel/VBox/TopBar"]
-custom_minimum_size = Vector2(250, 0)
+[node name="FilterOption" type="OptionButton" parent="Panel/VBox/TopBar"]
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
-placeholder_text = "Search songs..."
-
-[node name="GenreFilter" type="OptionButton" parent="Panel/VBox/TopBar"]
-custom_minimum_size = Vector2(150, 0)
-layout_mode = 2
-
-[node name="ArtistFilter" type="OptionButton" parent="Panel/VBox/TopBar"]
-custom_minimum_size = Vector2(150, 0)
-layout_mode = 2
+size_flags_horizontal = 3
 
 [node name="SortOption" type="OptionButton" parent="Panel/VBox/TopBar"]
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(200, 0)
 layout_mode = 2
+
+[node name="ClearButton" type="Button" parent="Panel/VBox/TopBar"]
+layout_mode = 2
+text = "Clear All"
+
+[node name="StatsPanel" type="PanelContainer" parent="Panel/VBox"]
+layout_mode = 2
+
+[node name="Grid" type="GridContainer" parent="Panel/VBox/StatsPanel"]
+layout_mode = 2
+columns = 2
+
+[node name="TotalPlaysLabel" type="Label" parent="Panel/VBox/StatsPanel/Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Total Plays: 0"
+
+[node name="AverageAccuracyLabel" type="Label" parent="Panel/VBox/StatsPanel/Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Average Accuracy: 0%"
+
+[node name="HighestScoreLabel" type="Label" parent="Panel/VBox/StatsPanel/Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Highest Score: --"
+
+[node name="FavoriteSongLabel" type="Label" parent="Panel/VBox/StatsPanel/Grid"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "Favorite Song: --"
 
 [node name="ScrollContainer" type="ScrollContainer" parent="Panel/VBox"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="SongList" type="VBoxContainer" parent="Panel/VBox/ScrollContainer"]
+[node name="LeaderboardList" type="VBoxContainer" parent="Panel/VBox/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 5
-
-[node name="PreviewPlayer" type="AudioStreamPlayer" parent="."]

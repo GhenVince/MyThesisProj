@@ -1,7 +1,8 @@
-[gd_scene load_steps=8 format=3 uid="uid://drc36dih67rvm"]
+[gd_scene load_steps=9 format=3 uid="uid://drc36dih67rvm"]
 
 [ext_resource type="Script" uid="uid://bedsursfqh5k0" path="res://scripts/main_menu.gd" id="1_853f1"]
 [ext_resource type="FontFile" uid="uid://1v3itk0hkdou" path="res://Assets/Text/04B_30__.TTF" id="2_8saeu"]
+[ext_resource type="PackedScene" uid="uid://cgew1lnr8gvgb" path="res://Scenes/OptionsMenu.tscn" id="3_8saeu"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_28flt"]
 bg_color = Color(0.0169219, 0.0604374, 0.188907, 1)
@@ -101,7 +102,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="Playbtn" type="Button" parent="UI/VBoxContainer/HBoxContainer2"]
+[node name="PlayButton" type="Button" parent="UI/VBoxContainer/HBoxContainer2"]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -112,7 +113,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
 text = "Play"
 
-[node name="Leaderboardsbtn" type="Button" parent="UI/VBoxContainer/HBoxContainer2"]
+[node name="LeaderboardButton" type="Button" parent="UI/VBoxContainer/HBoxContainer2"]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -128,7 +129,7 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="Optionsbtn" type="Button" parent="UI/VBoxContainer/HBoxContainer"]
+[node name="OptionsButton" type="Button" parent="UI/VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -139,7 +140,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
 text = "Options"
 
-[node name="Exitbtn" type="Button" parent="UI/VBoxContainer/HBoxContainer"]
+[node name="ExitButton" type="Button" parent="UI/VBoxContainer/HBoxContainer"]
 custom_minimum_size = Vector2(150, 150)
 layout_mode = 2
 size_flags_horizontal = 3
@@ -150,7 +151,14 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_48xlc")
 theme_override_styles/focus = SubResource("StyleBoxEmpty_28flt")
 text = "Exit"
 
-[connection signal="pressed" from="UI/VBoxContainer/HBoxContainer2/Playbtn" to="." method="_on_playbtn_pressed"]
-[connection signal="pressed" from="UI/VBoxContainer/HBoxContainer2/Leaderboardsbtn" to="." method="_on_leaderboardsbtn_pressed"]
-[connection signal="pressed" from="UI/VBoxContainer/HBoxContainer/Optionsbtn" to="." method="_on_optionsbtn_pressed"]
-[connection signal="pressed" from="UI/VBoxContainer/HBoxContainer/Exitbtn" to="." method="_on_exitbtn_pressed"]
+[node name="OptionsMenu" parent="UI" instance=ExtResource("3_8saeu")]
+layout_mode = 1
+offset_left = 18.0
+offset_top = -14.0
+offset_right = 64.0
+offset_bottom = -18.0
+
+[connection signal="pressed" from="UI/VBoxContainer/HBoxContainer2/PlayButton" to="." method="_on_playbtn_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/HBoxContainer2/LeaderboardButton" to="." method="_on_leaderboardsbtn_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/HBoxContainer/OptionsButton" to="." method="_on_optionsbtn_pressed"]
+[connection signal="pressed" from="UI/VBoxContainer/HBoxContainer/ExitButton" to="." method="_on_exitbtn_pressed"]
