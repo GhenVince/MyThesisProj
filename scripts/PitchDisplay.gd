@@ -93,12 +93,12 @@ func update_player_pitch(y_position: float = 0.0, note: String = ""):
 		
 		# Update label
 		if player_note_label:
-			player_note_label.text = "Player: %s (Y=%.1f)" % [note, player_pitch]
+			player_note_label.text = "" % [note, player_pitch]
 	else:
 		player_note = ""
 		player_octave = 0
 		if player_note_label:
-			player_note_label.text = "Player: --"
+			player_note_label.text = ""
 
 func update_reference_pitch(y_position: float = 0.0, time: float = 0.0):
 	"""Update reference pitch (from vocals)"""
@@ -113,12 +113,12 @@ func update_reference_pitch(y_position: float = 0.0, time: float = 0.0):
 		
 		# Update label if you want to show something
 		if reference_note_label:
-			reference_note_label.text = "Target: Y=%.1f" % y_position
+			reference_note_label.text = "" % y_position
 	else:
 		reference_note = ""
 		reference_octave = 0
 		if reference_note_label:
-			reference_note_label.text = "Target: --"
+			reference_note_label.text = ""
 
 func set_note_range(min_octave: int, max_octave: int):
 	"""Set the display range for notes"""
