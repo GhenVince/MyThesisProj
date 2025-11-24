@@ -7,8 +7,8 @@ extends Control
 @export var line_color: Color = Color.WHITE
 @export var player_color: Color = Color.GREEN
 @export var reference_color: Color = Color.CYAN
-@export var perfect_zone_color: Color = Color(0.0, 1.0, 0.0, 0.3)
-@export var good_zone_color: Color = Color(1.0, 1.0, 0.0, 0.2)
+@export var perfect_zone_color: Color = Color(0.0, 1.0, 0.0, 0.15)  # More subtle green
+@export var good_zone_color: Color = Color(1.0, 1.0, 0.0, 0.1)    # More subtle yellow
 
 # Note configuration
 const NOTES = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
@@ -38,7 +38,8 @@ var scroll_speed: float = 100.0  # Pixels per second
 # History for smooth visualization
 var pitch_history: Array = []
 var reference_history: Array = []  # NEW: History for reference pitch tail
-const MAX_HISTORY_SIZE = 30
+const MAX_HISTORY_SIZE = 20  # Reduced from 30 for cleaner look
+const SMOOTHING_FACTOR = 0.3  # How much to smooth (0=no smooth, 1=full smooth)
 
 # UI nodes (if you want to add labels)
 var player_note_label: Label
@@ -65,9 +66,9 @@ func setup_ui_labels():
 func _draw():
 	"""Draw the pitch display"""
 	draw_note_lines()
-	draw_reference_pitch()
-	draw_player_pitch()
-	draw_pitch_zones()
+	draw_pitch_zones()      # Draw zones first (background)
+	draw_reference_pitch()  # Then reference line/tail
+	draw_player_pitch()     # Then player line/tail (circles on top!)
 
 func _process(_delta):
 	queue_redraw()  # Godot 4.x uses queue_redraw() instead of update()
@@ -75,21 +76,24 @@ func _process(_delta):
 # === PITCH UPDATE FUNCTIONS ===
 
 func update_player_pitch(y_position: float = 0.0, note: String = ""):
-	"""Update player's current pitch"""
-	# Store the y position for drawing
-	player_pitch = y_position
-	
+	"""Update player's current pitch with smoothing"""
 	if y_position > 0 and not note.is_empty():
+		# Smooth the position to reduce jitter
+		if player_pitch > 0:
+			player_pitch = lerp(player_pitch, y_position, SMOOTHING_FACTOR)
+		else:
+			player_pitch = y_position
+		
 		player_note = note
 		
-		# Add to history for smoothing (store y position)
-		pitch_history.append(y_position)
+		# Add to history for smoothing (store smoothed position)
+		pitch_history.append(player_pitch)
 		if pitch_history.size() > MAX_HISTORY_SIZE:
 			pitch_history.pop_front()
 		
 		# Update label
 		if player_note_label:
-			player_note_label.text = "Player: %s (Y=%.1f)" % [note, y_position]
+			player_note_label.text = "Player: %s (Y=%.1f)" % [note, player_pitch]
 	else:
 		player_note = ""
 		player_octave = 0

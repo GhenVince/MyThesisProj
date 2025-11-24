@@ -50,6 +50,13 @@ func _ready():
 	setup_audio()
 	setup_pitch_detection()
 	
+	# Connect pause menu signals
+	if pause_menu:
+		pause_menu.continue_game.connect(_on_pause_continue)
+		pause_menu.retry_game.connect(_on_pause_retry)
+		pause_menu.open_options.connect(_on_pause_options)
+		pause_menu.exit_to_menu.connect(_on_pause_exit)
+	
 	pause_menu.hide()
 	countdown_label.hide()
 	
@@ -427,40 +434,35 @@ func pause_game():
 	audio_player.stream_paused = true
 	if reference_analyzer_active:
 		vocal_player.stream_paused = true
-	pause_menu.show()
-	get_tree().paused = true
+	pause_menu.open()
 
 func resume_game():
-	pause_menu.hide()
 	is_paused = false
 	audio_player.stream_paused = false
 	if reference_analyzer_active:
 		vocal_player.stream_paused = false
-	get_tree().paused = false
+	pause_menu.close()
 
-# === PAUSE MENU BUTTON HANDLERS ===
+# === PAUSE MENU SIGNAL HANDLERS ===
 
-func _on_continue_pressed():
+func _on_pause_continue():
 	"""Continue playing"""
 	resume_game()
 
-func _on_retry_pressed():
+func _on_pause_retry():
 	"""Restart the song"""
-	get_tree().paused = false
 	get_tree().reload_current_scene()
 
-func _on_pause_options_pressed():
+func _on_pause_options():
 	"""Open options from pause menu"""
-	get_tree().paused = false
 	if ResourceLoader.exists("res://scenes/OptionsMenu.tscn"):
 		get_tree().change_scene_to_file("res://scenes/OptionsMenu.tscn")
 	else:
 		print("OptionsMenu.tscn not found!")
 		get_tree().paused = true
 
-func _on_exit_pressed():
+func _on_pause_exit():
 	"""Exit to main menu"""
-	get_tree().paused = false
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func end_game():

@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://13jqm4n3t5u5"]
+[gd_scene load_steps=4 format=3 uid="uid://13jqm4n3t5u5"]
 
 [ext_resource type="Script" uid="uid://wj2vrrvbhvd6" path="res://scripts/Gameplay.gd" id="1"]
 [ext_resource type="Script" uid="uid://cdtngb1vbtyrw" path="res://scripts/PitchDisplay.gd" id="2"]
+[ext_resource type="PackedScene" uid="uid://cn8wtgg1hfr17" path="res://scenes/PauseMenu.tscn" id="3"]
 
 [node name="Gameplay" type="Control"]
 layout_mode = 3
@@ -133,65 +134,10 @@ vertical_alignment = 1
 
 [node name="VocalPlayer" type="AudioStreamPlayer" parent="UI"]
 
-[node name="PauseMenu" type="Panel" parent="UI"]
-visible = false
+[node name="PauseMenu" parent="UI" instance=ExtResource("3")]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -200.0
-offset_right = 200.0
-offset_bottom = 200.0
-grow_horizontal = 2
-grow_vertical = 2
 
-[node name="VBox" type="VBoxContainer" parent="UI/PauseMenu"]
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_left = 10.0
-offset_top = 10.0
-offset_right = -10.0
-offset_bottom = -10.0
-grow_horizontal = 2
-grow_vertical = 2
-theme_override_constants/separation = 10
-
-[node name="Title" type="Label" parent="UI/PauseMenu/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 32
-text = "PAUSED"
-horizontal_alignment = 1
-
-[node name="Spacer" type="Control" parent="UI/PauseMenu/VBox"]
-custom_minimum_size = Vector2(0, 20)
-layout_mode = 2
-
-[node name="ContinueButton" type="Button" parent="UI/PauseMenu/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Continue"
-
-[node name="RetryButton" type="Button" parent="UI/PauseMenu/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Retry"
-
-[node name="OptionsButton" type="Button" parent="UI/PauseMenu/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Options"
-
-[node name="ExitButton" type="Button" parent="UI/PauseMenu/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 20
-text = "Exit to Menu"
-
-[connection signal="pressed" from="UI/PauseMenu/VBox/ContinueButton" to="." method="_on_continue_pressed"]
-[connection signal="pressed" from="UI/PauseMenu/VBox/RetryButton" to="." method="_on_retry_pressed"]
-[connection signal="pressed" from="UI/PauseMenu/VBox/OptionsButton" to="." method="_on_pause_options_pressed"]
-[connection signal="pressed" from="UI/PauseMenu/VBox/ExitButton" to="." method="_on_exit_pressed"]
+[connection signal="continue_game" from="UI/PauseMenu" to="." method="_on_pause_continue"]
+[connection signal="exit_to_menu" from="UI/PauseMenu" to="." method="_on_pause_exit"]
+[connection signal="open_options" from="UI/PauseMenu" to="." method="_on_pause_options"]
+[connection signal="retry_game" from="UI/PauseMenu" to="." method="_on_pause_retry"]
