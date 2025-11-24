@@ -1,4 +1,4 @@
-# Gameplay.gd - COMPLETE WORKING VERSION
+# Gameplay.gd - COMPLETE WITH PAUSE MENU
 extends Control
 
 @onready var pitch_display = $UI/PitchDisplay
@@ -30,19 +30,16 @@ var reference_pitch_smoothing: Array = []
 
 var vocal_effect_capture: AudioEffectCapture
 
+# Pitch display bounds
+const MIN_DISPLAY_FREQ = 100.0  # Hz
+const MAX_DISPLAY_FREQ = 500.0  # Hz
+
 const NOTE_POSITIONS = {
 	"C": 0, "C#": 1, "D": 2, "D#": 3, "E": 4, "F": 5,
 	"F#": 6, "G": 7, "G#": 8, "A": 9, "A#": 10, "B": 11
 }
 
 func _ready():
-	# DEBUG: Print note arrangement
-	print("\n=== NOTE ARRANGEMENT (bottom to top) ===")
-	for i in range(12):
-		var notes = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"]
-		print(i, ": ", notes[i])
-	print("=======================================\n")
-	
 	if GameManager.current_song.is_empty():
 		push_error("No song selected!")
 		get_tree().change_scene_to_file("res://scenes/SongSelection.tscn")
@@ -149,7 +146,6 @@ func setup_player_monitoring():
 	print("✓ Player monitoring enabled")
 
 func setup_pitch_detection():
-	# Check if AutoLoad exists
 	if not has_node("/root/PitchDetector"):
 		push_error("PitchDetector AutoLoad not found! Creating manually...")
 		pitch_detector = load("res://scripts/YINPitchDetector.gd").new()
@@ -189,14 +185,7 @@ func _process(delta):
 	
 	var frequency = pitch_detector.detect_pitch()
 	
-	# DEBUG: Check if detecting
-	if Engine.get_process_frames() % 60 == 0:
-		if frequency > 0:
-			print("✓ Player detected: %.1f Hz" % frequency)
-		else:
-			print("⚠ No player pitch detected")
-	
-	# Only update player pitch if actually detected (not silent)
+	# Update player pitch if detected
 	if frequency > 0:
 		var note_data = pitch_detector.get_note_with_cents(frequency)
 		update_pitch_display(note_data)
@@ -205,7 +194,7 @@ func _process(delta):
 		if player_pitch_history.size() % 20 == 0:
 			analyze_player_timbre()
 	
-	# Always scroll the display for smooth animation
+	# Always scroll the display
 	pitch_display.scroll_display(delta)
 	
 	if reference_analyzer_active:
@@ -236,26 +225,20 @@ func detect_reference_pitch():
 		var frequency = analyze_reference_frequency(mono_buffer)
 		
 		if frequency > 0:
-			# Smooth the pitch to prevent jumps
 			reference_pitch_smoothing.append(frequency)
 			if reference_pitch_smoothing.size() > 5:
 				reference_pitch_smoothing.pop_front()
 			
-			# Average the last 5 detections
 			var smoothed_freq = 0.0
 			for f in reference_pitch_smoothing:
 				smoothed_freq += f
 			smoothed_freq /= reference_pitch_smoothing.size()
 			
-			# Only update if change is significant or smooth
 			if abs(smoothed_freq - last_reference_pitch) < 50.0 or last_reference_pitch == 0.0:
 				last_reference_pitch = smoothed_freq
 				
 				var note_data = pitch_detector.get_note_with_cents(smoothed_freq)
-				var y_position = get_note_position(note_data["note"])
-				
-				# Clamp y_position to display bounds
-				y_position = clamp(y_position, 0, pitch_display.size.y)
+				var y_position = get_position_from_frequency(smoothed_freq)
 				
 				pitch_display.update_reference_pitch(y_position, current_time)
 				
@@ -272,21 +255,18 @@ func analyze_reference_frequency(samples: PackedFloat32Array) -> float:
 	
 	var half_buffer = int(buffer_size / 2.0)
 	
-	# Check if signal is loud enough (increased threshold)
 	var max_amp = 0.0
 	for sample in samples:
 		max_amp = max(max_amp, abs(sample))
 	
-	# Increased threshold to filter out quiet/noisy parts
 	if max_amp < 0.03:
 		return 0.0
 	
 	var best_period = 0
 	var best_correlation = 0.0
 	
-	# Search in vocal range only (80Hz to 800Hz)
-	var min_period = int(44100.0 / 800.0)  # ~55 samples
-	var max_period = int(44100.0 / 80.0)   # ~551 samples
+	var min_period = int(44100.0 / 800.0)
+	var max_period = int(44100.0 / 80.0)
 	
 	for period in range(min_period, min(max_period, half_buffer)):
 		var correlation = 0.0
@@ -297,64 +277,44 @@ func analyze_reference_frequency(samples: PackedFloat32Array) -> float:
 			best_correlation = correlation
 			best_period = period
 	
-	if best_period > 0 and best_correlation > 0.1:  # Added correlation threshold
+	if best_period > 0 and best_correlation > 0.1:
 		var frequency = 44100.0 / best_period
-		# Stricter frequency range for vocals
 		if frequency >= 80 and frequency <= 800:
 			return frequency
 	
 	return 0.0
 
 func update_pitch_display(note_data: Dictionary):
-	var note = note_data["note"]
 	var frequency = note_data["frequency"]
-	var octave = note_data["octave"]
+	var note = note_data["note"]
 	
-	# Use frequency-based positioning for accuracy
 	var position_y = get_position_from_frequency(frequency)
-	
-	# DEBUG
-	if Engine.get_process_frames() % 30 == 0:
-		var in_bounds = position_y >= 0 and position_y <= pitch_display.size.y
-		print("Pitch: %.1f Hz → %s%d → Y: %.1f %s" % [frequency, note, octave, position_y, "✓" if in_bounds else "❌ OUT OF BOUNDS"])
-	
 	pitch_display.update_player_pitch(position_y, note)
 
 func get_position_from_frequency(frequency: float) -> float:
+	"""Convert frequency to Y position with STRICT clamping"""
 	if frequency <= 0:
 		return pitch_display.size.y / 2.0
 	
 	var display_height = pitch_display.size.y
 	
-	# Narrower frequency range = notes closer together, more visible
-	# Typical singing range: 100-500 Hz (covers about 2 octaves)
-	var min_freq = 100.0  # Was 80
-	var max_freq = 500.0  # Was 800
+	# Clamp frequency to display range FIRST
+	frequency = clamp(frequency, MIN_DISPLAY_FREQ, MAX_DISPLAY_FREQ)
 	
-	# Clamp frequency to our range
-	frequency = clamp(frequency, min_freq, max_freq)
-	
-	# Calculate position
-	# 100 Hz (low) → bottom (high Y)
-	# 500 Hz (high) → top (low Y)
-	var normalized = (frequency - min_freq) / (max_freq - min_freq)
+	# Calculate normalized position (0 = top, 1 = bottom)
+	var normalized = (frequency - MIN_DISPLAY_FREQ) / (MAX_DISPLAY_FREQ - MIN_DISPLAY_FREQ)
 	var y_position = display_height * (1.0 - normalized)
 	
-	# Clamp to display bounds with margin
-	y_position = clamp(y_position, 10, display_height - 10)
+	# STRICT clamping with larger margin
+	y_position = clamp(y_position, 20, display_height - 20)
 	
 	return y_position
 
 func get_note_position(note: String) -> float:
-	# Keep this for reference pitch detection
 	var note_index = NOTE_POSITIONS.get(note, 0)
 	var display_height = pitch_display.size.y
 	var note_position = display_height - (note_index * (display_height / 12.0))
-	return note_position
-
-func get_note_position_with_octave(note: String, octave: int) -> float:
-	# For reference vocals, just use simple position (ignore octave for now)
-	return get_note_position(note)
+	return clamp(note_position, 20, display_height - 20)
 
 func check_pitch_accuracy():
 	if player_pitch_history.is_empty():
@@ -400,11 +360,10 @@ func get_most_common_note(pitches: Array) -> String:
 	return most_common
 
 func get_reference_note_at_time(_time: float) -> String:
-	# Find closest reference pitch
 	for ref in reference_pitches:
 		if abs(ref["time"] - _time) < 0.5:
 			return ref["note"]
-	return "C"  # Default fallback
+	return "C"
 
 func calculate_note_accuracy(player_note: String, reference_note: String) -> float:
 	if player_note == reference_note:
@@ -473,14 +432,36 @@ func pause_game():
 
 func resume_game():
 	pause_menu.hide()
-	start_countdown()
-
-func continue_after_countdown():
 	is_paused = false
 	audio_player.stream_paused = false
 	if reference_analyzer_active:
 		vocal_player.stream_paused = false
 	get_tree().paused = false
+
+# === PAUSE MENU BUTTON HANDLERS ===
+
+func _on_continue_pressed():
+	"""Continue playing"""
+	resume_game()
+
+func _on_retry_pressed():
+	"""Restart the song"""
+	get_tree().paused = false
+	get_tree().reload_current_scene()
+
+func _on_pause_options_pressed():
+	"""Open options from pause menu"""
+	get_tree().paused = false
+	if ResourceLoader.exists("res://scenes/OptionsMenu.tscn"):
+		get_tree().change_scene_to_file("res://scenes/OptionsMenu.tscn")
+	else:
+		print("OptionsMenu.tscn not found!")
+		get_tree().paused = true
+
+func _on_exit_pressed():
+	"""Exit to main menu"""
+	get_tree().paused = false
+	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func end_game():
 	is_playing = false

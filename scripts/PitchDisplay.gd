@@ -31,8 +31,13 @@ var reference_note: String = ""
 var player_octave: int = 0
 var reference_octave: int = 0
 
+# Scrolling
+var scroll_offset: float = 0.0
+var scroll_speed: float = 100.0  # Pixels per second
+
 # History for smooth visualization
 var pitch_history: Array = []
+var reference_history: Array = []  # NEW: History for reference pitch tail
 const MAX_HISTORY_SIZE = 30
 
 # UI nodes (if you want to add labels)
@@ -69,41 +74,42 @@ func _process(_delta):
 
 # === PITCH UPDATE FUNCTIONS ===
 
-func update_player_pitch(frequency: float = 0.0):
+func update_player_pitch(y_position: float = 0.0, note: String = ""):
 	"""Update player's current pitch"""
-	player_pitch = frequency
+	# Store the y position for drawing
+	player_pitch = y_position
 	
-	if frequency > 0:
-		var note_data = frequency_to_note_data(frequency)
-		player_note = note_data["note"]
-		player_octave = note_data["octave"]
+	if y_position > 0 and not note.is_empty():
+		player_note = note
 		
-		# Add to history for smoothing
-		pitch_history.append(frequency)
+		# Add to history for smoothing (store y position)
+		pitch_history.append(y_position)
 		if pitch_history.size() > MAX_HISTORY_SIZE:
 			pitch_history.pop_front()
 		
 		# Update label
 		if player_note_label:
-			player_note_label.text = "Player: %s%d (%.1f Hz)" % [player_note, player_octave, frequency]
+			player_note_label.text = "Player: %s (Y=%.1f)" % [note, y_position]
 	else:
 		player_note = ""
 		player_octave = 0
 		if player_note_label:
 			player_note_label.text = "Player: --"
 
-func update_reference_pitch(frequency: float = 0.0):
+func update_reference_pitch(y_position: float = 0.0, time: float = 0.0):
 	"""Update reference pitch (from vocals)"""
-	reference_pitch = frequency
+	# Store the y position for drawing
+	reference_pitch = y_position
 	
-	if frequency > 0:
-		var note_data = frequency_to_note_data(frequency)
-		reference_note = note_data["note"]
-		reference_octave = note_data["octave"]
+	# Add to history for tail effect
+	if y_position > 0:
+		reference_history.append(y_position)
+		if reference_history.size() > MAX_HISTORY_SIZE:
+			reference_history.pop_front()
 		
-		# Update label
+		# Update label if you want to show something
 		if reference_note_label:
-			reference_note_label.text = "Target: %s%d (%.1f Hz)" % [reference_note, reference_octave, frequency]
+			reference_note_label.text = "Target: Y=%.1f" % y_position
 	else:
 		reference_note = ""
 		reference_octave = 0
@@ -160,82 +166,135 @@ func draw_note_lines():
 			)
 
 func draw_reference_pitch():
-	"""Draw the reference pitch line (from vocals)"""
+	"""Draw the reference pitch line with tail (from vocals)"""
 	if reference_pitch <= 0:
 		return
 	
-	var y_pos = get_y_position_for_frequency(reference_pitch)
+	var y_pos = reference_pitch  # Already a Y position!
 	
-	if y_pos < 0 or y_pos > size.y:
-		return  # Out of display range
+	# Clamp to display bounds
+	y_pos = clamp(y_pos, 0, size.y)
 	
-	# Draw reference line
-	draw_line(
-		Vector2(0, y_pos),
-		Vector2(size.x, y_pos),
-		reference_color,
-		4.0
-	)
+	# Draw reference history trail (tail effect)
+	if reference_history.size() > 1:
+		var trail_points = PackedVector2Array()
+		for i in range(reference_history.size()):
+			var trail_y = reference_history[i]
+			# Clamp trail Y positions
+			trail_y = clamp(trail_y, 0, size.y)
+			
+			# Calculate X position with scrolling
+			var progress = float(i) / reference_history.size()
+			var x = size.x * (0.5 + progress * 0.5) - scroll_offset
+			
+			# Wrap X position for continuous scrolling
+			while x < 0:
+				x += size.x
+			while x > size.x:
+				x -= size.x
+			
+			trail_points.append(Vector2(x, trail_y))
+		
+		# Draw the trail line
+		if trail_points.size() > 1:
+			for i in range(trail_points.size() - 1):
+				var alpha = float(i) / trail_points.size()
+				var trail_color = Color(reference_color.r, reference_color.g, reference_color.b, alpha * 0.7)
+				draw_line(trail_points[i], trail_points[i + 1], trail_color, 3.0)
 	
-	# Draw note indicator
-	draw_circle(Vector2(size.x - 30, y_pos), 8.0, reference_color)
+	# Draw current reference position circle
+	var x_pos = size.x * 0.75 - scroll_offset
+	while x_pos < 0:
+		x_pos += size.x
+	while x_pos > size.x:
+		x_pos -= size.x
+	
+	draw_circle(Vector2(x_pos, y_pos), 8.0, reference_color)
 
 func draw_player_pitch():
-	"""Draw the player's current pitch"""
+	"""Draw the player's current pitch with scrolling"""
 	if player_pitch <= 0:
 		return
 	
-	var y_pos = get_y_position_for_frequency(player_pitch)
+	var y_pos = player_pitch  # Already a Y position!
 	
-	if y_pos < 0 or y_pos > size.y:
-		return  # Out of display range
+	# Clamp to display bounds
+	y_pos = clamp(y_pos, 0, size.y)
 	
-	# Draw main pitch indicator
-	draw_circle(Vector2(size.x / 2, y_pos), 12.0, player_color)
-	
-	# Draw pitch history trail
+	# Draw pitch history trail with scrolling
 	if pitch_history.size() > 1:
 		var trail_points = PackedVector2Array()
 		for i in range(pitch_history.size()):
-			var freq = pitch_history[i]
-			var trail_y = get_y_position_for_frequency(freq)
-			if trail_y >= 0 and trail_y <= size.y:
-				var x = lerp(size.x / 4, size.x / 2, float(i) / pitch_history.size())
-				trail_points.append(Vector2(x, trail_y))
+			var trail_y = pitch_history[i]  # Already Y positions!
+			# Clamp trail Y positions
+			trail_y = clamp(trail_y, 0, size.y)
+			
+			# Calculate X position with scrolling
+			var progress = float(i) / pitch_history.size()
+			var x = size.x * (0.25 + progress * 0.25) - scroll_offset
+			
+			# Wrap X position for continuous scrolling
+			while x < 0:
+				x += size.x
+			while x > size.x:
+				x -= size.x
+			
+			trail_points.append(Vector2(x, trail_y))
 		
+		# Draw the trail
 		if trail_points.size() > 1:
 			for i in range(trail_points.size() - 1):
 				var alpha = float(i) / trail_points.size()
 				var trail_color = Color(player_color.r, player_color.g, player_color.b, alpha * 0.5)
 				draw_line(trail_points[i], trail_points[i + 1], trail_color, 3.0)
+	
+	# Draw main pitch indicator with scrolling
+	var x_pos = size.x * 0.5 - scroll_offset
+	while x_pos < 0:
+		x_pos += size.x
+	while x_pos > size.x:
+		x_pos -= size.x
+	
+	draw_circle(Vector2(x_pos, y_pos), 12.0, player_color)
 
 func draw_pitch_zones():
 	"""Draw colored zones showing perfect/good hit areas"""
 	if reference_pitch <= 0:
 		return
 	
-	var ref_y = get_y_position_for_frequency(reference_pitch)
+	var ref_y = reference_pitch  # Already a Y position!
 	
-	if ref_y < 0 or ref_y > size.y:
-		return
+	# Clamp to display bounds
+	ref_y = clamp(ref_y, 0, size.y)
 	
 	# Perfect zone (±25 cents = ~1.5 semitones)
 	var perfect_range = note_height * 0.25  # About 1/4 of a note
+	var perfect_top = clamp(ref_y - perfect_range, 0, size.y)
+	var perfect_bottom = clamp(ref_y + perfect_range, 0, size.y)
+	
 	draw_rect(
-		Rect2(0, ref_y - perfect_range, size.x, perfect_range * 2),
+		Rect2(0, perfect_top, size.x, perfect_bottom - perfect_top),
 		perfect_zone_color
 	)
 	
 	# Good zone (±50 cents = ~3 semitones)
 	var good_range = note_height * 0.5  # About 1/2 of a note
-	draw_rect(
-		Rect2(0, ref_y - good_range, size.x, perfect_range),
-		good_zone_color
-	)
-	draw_rect(
-		Rect2(0, ref_y + perfect_range, size.x, good_range - perfect_range),
-		good_zone_color
-	)
+	var good_top = clamp(ref_y - good_range, 0, size.y)
+	
+	# Top good zone
+	if good_top < perfect_top:
+		draw_rect(
+			Rect2(0, good_top, size.x, perfect_top - good_top),
+			good_zone_color
+		)
+	
+	# Bottom good zone
+	var good_bottom = clamp(ref_y + good_range, 0, size.y)
+	if perfect_bottom < good_bottom:
+		draw_rect(
+			Rect2(0, perfect_bottom, size.x, good_bottom - perfect_bottom),
+			good_zone_color
+		)
 
 # === HELPER FUNCTIONS ===
 
@@ -333,9 +392,11 @@ func set_colors(player: Color, reference: Color):
 	player_color = player
 	reference_color = reference
 
-func scroll_display(_scroll_amount: float):
-	"""Scroll the pitch display (for moving visualization)"""
-	# This can be used if you want the display to scroll/move
-	# For now, it's a placeholder that does nothing
-	# You can implement scrolling behavior if needed
-	pass
+func scroll_display(delta_or_amount: float):
+	"""Scroll the pitch display continuously"""
+	# Treat input as delta time for continuous scrolling
+	scroll_offset += scroll_speed * delta_or_amount
+	
+	# Reset offset periodically to avoid overflow
+	if scroll_offset > size.x * 2:
+		scroll_offset = fmod(scroll_offset, size.x)
