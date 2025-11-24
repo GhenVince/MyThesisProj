@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3 uid="uid://13jqm4n3t5u5"]
+[gd_scene load_steps=6 format=3 uid="uid://13jqm4n3t5u5"]
 
 [ext_resource type="Script" uid="uid://wj2vrrvbhvd6" path="res://scripts/Gameplay.gd" id="1"]
 [ext_resource type="Script" uid="uid://cdtngb1vbtyrw" path="res://scripts/PitchDisplay.gd" id="2"]
 [ext_resource type="PackedScene" path="res://scenes/PauseMenu.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://cgew1lnr8gvgb" path="res://Scenes/OptionsMenu.tscn" id="4_mofsa"]
+[ext_resource type="Script" uid="uid://cl1oxa2ivmn6o" path="res://scripts/PlayerVoiceFeedback.gd" id="4_ovofm"]
 
 [node name="Gameplay" type="Control"]
 layout_mode = 3
@@ -136,6 +138,15 @@ vertical_alignment = 1
 
 [node name="PauseMenu" parent="UI" instance=ExtResource("3")]
 layout_mode = 1
+
+[node name="OptionsMenu" parent="UI" instance=ExtResource("4_mofsa")]
+visible = false
+layout_mode = 1
+
+[node name="PlayerVoiceFeedback" type="Node" parent="."]
+script = ExtResource("4_ovofm")
+
+[node name="UltimateMicTest" type="Node" parent="."]
 
 [connection signal="continue_game" from="UI/PauseMenu" to="." method="_on_pause_continue"]
 [connection signal="exit_to_menu" from="UI/PauseMenu" to="." method="_on_pause_exit"]

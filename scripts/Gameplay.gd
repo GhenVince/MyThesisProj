@@ -47,6 +47,11 @@ func _ready():
 	
 	song_data = GameManager.current_song
 	load_song_data()
+	
+	# IMPORTANT: Setup player monitoring FIRST (creates buses)
+	setup_player_monitoring()
+	
+	# Then setup other audio
 	setup_audio()
 	setup_pitch_detection()
 	
@@ -119,27 +124,55 @@ func setup_vocal_analysis_bus():
 	print("✓ Vocal analysis bus created")
 
 func setup_player_monitoring():
+	"""Setup player voice monitoring with reverb feedback"""
+	print("\n=== SETTING UP PLAYER MONITORING ===")
+	
+	# First, make sure Record bus exists and is enabled
+	var record_bus_idx = AudioServer.get_bus_index("Record")
+	if record_bus_idx == -1:
+		print("❌ Record bus not found! Enable microphone in Project Settings.")
+		return
+	
+	print("✓ Record bus found at index:", record_bus_idx)
+	
+	# Create PlayerMonitor bus FIRST
 	var monitor_bus_idx = AudioServer.get_bus_index("PlayerMonitor")
 	if monitor_bus_idx == -1:
 		monitor_bus_idx = AudioServer.bus_count
 		AudioServer.add_bus(monitor_bus_idx)
 		AudioServer.set_bus_name(monitor_bus_idx, "PlayerMonitor")
+		print("✓ Created PlayerMonitor bus at index:", monitor_bus_idx)
+	else:
+		print("✓ PlayerMonitor bus already exists at index:", monitor_bus_idx)
 	
-	# Clear any existing effects
+	# Clear any existing effects on PlayerMonitor
 	for i in range(AudioServer.get_bus_effect_count(monitor_bus_idx) - 1, -1, -1):
 		AudioServer.remove_bus_effect(monitor_bus_idx, i)
 	
+	# CRITICAL: Route Record → PlayerMonitor IMMEDIATELY
+	AudioServer.set_bus_send(record_bus_idx, "PlayerMonitor")
+	print("✓ Record bus now sends to: PlayerMonitor")
+	
+	# CRITICAL: Route PlayerMonitor → Master IMMEDIATELY
+	AudioServer.set_bus_send(monitor_bus_idx, "Master")
+	print("✓ PlayerMonitor bus now sends to: Master")
+	
+	# Enable Record bus (unmute)
+	AudioServer.set_bus_mute(record_bus_idx, false)
+	print("✓ Record bus unmuted")
+	
 	# 1. Noise Gate - Remove background noise
 	var noise_gate = AudioEffectCompressor.new()
-	noise_gate.threshold = -35.0  # Lower threshold for better detection
+	noise_gate.threshold = -40.0  # Even lower for better sensitivity
 	noise_gate.ratio = 20.0
-	noise_gate.attack_us = 10.0   # Faster attack for less delay
-	noise_gate.release_ms = 100.0  # Faster release
+	noise_gate.attack_us = 5.0    # Very fast attack for instant response
+	noise_gate.release_ms = 50.0  # Very fast release
 	AudioServer.add_bus_effect(monitor_bus_idx, noise_gate)
+	print("✓ Added Noise Gate")
 	
 	# 2. Reverb - Karaoke effect!
 	var reverb = AudioEffectReverb.new()
-	reverb.room_size = 0.8        # Larger room for karaoke feel
+	reverb.room_size = 0.8        # Large room for karaoke feel
 	reverb.damping = 0.4          # Less damping = more echo
 	reverb.spread = 1.0           # Full stereo spread
 	reverb.dry = 0.6              # Original voice
@@ -147,6 +180,7 @@ func setup_player_monitoring():
 	reverb.predelay_msec = 20.0   # Small predelay for depth
 	reverb.predelay_feedback = 0.4
 	AudioServer.add_bus_effect(monitor_bus_idx, reverb)
+	print("✓ Added Reverb (0.8 room, 40% wet)")
 	
 	# 3. EQ - Boost vocals
 	var eq = AudioEffectEQ.new()
@@ -156,18 +190,26 @@ func setup_player_monitoring():
 	eq.set_band_gain_db(3, 3.0)   # Boost clarity (2.5 kHz)
 	eq.set_band_gain_db(4, -1.0)  # Slight cut on highs (8 kHz)
 	AudioServer.add_bus_effect(monitor_bus_idx, eq)
+	print("✓ Added EQ (vocal boost)")
 	
 	# 4. Limiter - Prevent clipping and feedback
 	var limiter = AudioEffectLimiter.new()
 	limiter.threshold_db = -3.0
 	limiter.ceiling_db = -0.5
 	AudioServer.add_bus_effect(monitor_bus_idx, limiter)
+	print("✓ Added Limiter")
 	
-	# Set volume and routing
-	AudioServer.set_bus_volume_db(monitor_bus_idx, -3.0)  # Slightly louder
-	AudioServer.set_bus_send(AudioServer.get_bus_index("Record"), "PlayerMonitor")
+	# Set volume - FULL VOLUME for monitoring
+	AudioServer.set_bus_volume_db(monitor_bus_idx, 0.0)
+	print("✓ PlayerMonitor volume: 0.0 dB (full)")
 	
-	print("✓ Player monitoring with reverb enabled")
+	# Make sure not muted
+	AudioServer.set_bus_mute(monitor_bus_idx, false)
+	print("✓ PlayerMonitor unmuted")
+	
+	print("=== PLAYER MONITORING COMPLETE ===")
+	print("Audio Chain: Record → PlayerMonitor → Master → Speakers")
+	print("You should now hear yourself with reverb!\n")
 
 func setup_pitch_detection():
 	if not has_node("/root/PitchDetector"):
@@ -207,9 +249,10 @@ func _process(delta):
 	
 	current_time += delta
 	
+	# Detect pitch with minimal delay (process every frame)
 	var frequency = pitch_detector.detect_pitch()
 	
-	# Update player pitch if detected
+	# Update player pitch immediately if detected
 	if frequency > 0:
 		var note_data = pitch_detector.get_note_with_cents(frequency)
 		update_pitch_display(note_data)

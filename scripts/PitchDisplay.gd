@@ -38,8 +38,8 @@ var scroll_speed: float = 100.0  # Pixels per second
 # History for smooth visualization
 var pitch_history: Array = []
 var reference_history: Array = []  # NEW: History for reference pitch tail
-const MAX_HISTORY_SIZE = 20  # Reduced from 30 for cleaner look
-const SMOOTHING_FACTOR = 0.3  # How much to smooth (0=no smooth, 1=full smooth)
+const MAX_HISTORY_SIZE = 40  # Increased from 20 for longer tail
+const SMOOTHING_FACTOR = 0.1  # Reduced from 0.3 for faster response
 
 # UI nodes (if you want to add labels)
 var player_note_label: Label
@@ -50,18 +50,8 @@ func _ready():
 	setup_ui_labels()
 
 func setup_ui_labels():
-	"""Create optional note labels"""
-	# You can customize these positions
-	player_note_label = Label.new()
-	player_note_label.position = Vector2(10, 10)
-	player_note_label.add_theme_font_size_override("font_size", 24)
-	add_child(player_note_label)
-	
-	reference_note_label = Label.new()
-	reference_note_label.position = Vector2(10, 40)
-	reference_note_label.add_theme_font_size_override("font_size", 20)
-	reference_note_label.modulate = reference_color
-	add_child(reference_note_label)
+	"""Labels removed - cleaner display"""
+	pass
 
 func _draw():
 	"""Draw the pitch display"""
@@ -89,15 +79,13 @@ func update_player_pitch(y_position: float = 0.0, note: String = ""):
 		pitch_history.append(player_pitch)
 		if pitch_history.size() > MAX_HISTORY_SIZE:
 			pitch_history.pop_front()
-		
-		# Update label
-		if player_note_label:
-			player_note_label.text = "Player: %s (Y=%.1f)" % [note, player_pitch]
 	else:
-		player_note = ""
-		player_octave = 0
-		if player_note_label:
-			player_note_label.text = "Player: --"
+		# No pitch detected - keep adding last known pitch to history
+		# This keeps the line moving instead of stopping
+		if player_pitch > 0:
+			pitch_history.append(player_pitch)
+			if pitch_history.size() > MAX_HISTORY_SIZE:
+				pitch_history.pop_front()
 
 func update_reference_pitch(y_position: float = 0.0, time: float = 0.0):
 	"""Update reference pitch (from vocals)"""
@@ -109,15 +97,9 @@ func update_reference_pitch(y_position: float = 0.0, time: float = 0.0):
 		reference_history.append(y_position)
 		if reference_history.size() > MAX_HISTORY_SIZE:
 			reference_history.pop_front()
-		
-		# Update label if you want to show something
-		if reference_note_label:
-			reference_note_label.text = "Target: Y=%.1f" % y_position
 	else:
 		reference_note = ""
 		reference_octave = 0
-		if reference_note_label:
-			reference_note_label.text = "Target: --"
 
 func set_note_range(min_octave: int, max_octave: int):
 	"""Set the display range for notes"""
@@ -169,7 +151,7 @@ func draw_note_lines():
 			)
 
 func draw_reference_pitch():
-	"""Draw the reference pitch with stationary circle on right, scrolling tail"""
+	"""Draw the reference pitch with stationary circle and tail on right"""
 	if reference_pitch <= 0:
 		return
 	
@@ -178,34 +160,39 @@ func draw_reference_pitch():
 	# Clamp to display bounds
 	y_pos = clamp(y_pos, 0, size.y)
 	
-	# Draw reference history trail (tail scrolls from right to left)
+	# Circle position (STATIONARY on right edge)
+	var circle_x = size.x - 30
+	
+	# Draw reference history trail (tail extends LEFT from circle, NO scrolling)
 	if reference_history.size() > 1:
 		var trail_points = PackedVector2Array()
-		for i in range(reference_history.size()):
+		
+		# Start from the circle and work backwards
+		for i in range(reference_history.size() - 1, -1, -1):
 			var trail_y = reference_history[i]
-			# Clamp trail Y positions
 			trail_y = clamp(trail_y, 0, size.y)
 			
-			# Calculate X position: start from right edge, scroll left
-			var progress = float(i) / reference_history.size()
-			var x = size.x - (scroll_offset * progress)  # Scrolls left from right edge
+			# Calculate how far back in time this point is
+			var age = reference_history.size() - 1 - i
 			
-			# Stop drawing if off screen
+			# Position: circle x minus distance based ONLY on age (NO scroll_offset!)
+			var x = circle_x - (age * 10.0)  # Each point 10 pixels left
+			
+			# Stop if off screen
 			if x < 0:
-				continue
+				break
 			
 			trail_points.append(Vector2(x, trail_y))
 		
 		# Draw the trail line
 		if trail_points.size() > 1:
 			for i in range(trail_points.size() - 1):
-				var alpha = float(i) / trail_points.size()
+				var alpha = 1.0 - (float(i) / trail_points.size())  # Fade away from circle
 				var trail_color = Color(reference_color.r, reference_color.g, reference_color.b, alpha * 0.7)
 				draw_line(trail_points[i], trail_points[i + 1], trail_color, 3.0)
 	
-	# Draw current reference position circle (STATIONARY on right edge)
-	var circle_x = size.x - 30  # Fixed position on right
-	draw_circle(Vector2(circle_x, y_pos), 10.0, reference_color)
+	# Draw current reference position circle (on top)
+	draw_circle(Vector2(circle_x, y_pos), 6.0, reference_color)  # Reduced from 10.0
 
 func draw_player_pitch():
 	"""Draw the player's pitch with stationary circle on right, scrolling tail"""
@@ -217,34 +204,39 @@ func draw_player_pitch():
 	# Clamp to display bounds
 	y_pos = clamp(y_pos, 0, size.y)
 	
-	# Draw pitch history trail (tail scrolls from right to left)
+	# Circle position (STATIONARY on right edge)
+	var circle_x = size.x - 30
+	
+	# Draw pitch history trail (tail extends LEFT from circle)
 	if pitch_history.size() > 1:
 		var trail_points = PackedVector2Array()
-		for i in range(pitch_history.size()):
+		
+		# Start from the circle and work backwards
+		for i in range(pitch_history.size() - 1, -1, -1):
 			var trail_y = pitch_history[i]  # Already Y positions!
-			# Clamp trail Y positions
 			trail_y = clamp(trail_y, 0, size.y)
 			
-			# Calculate X position: start from right edge, scroll left
-			var progress = float(i) / pitch_history.size()
-			var x = size.x - (scroll_offset * progress)  # Scrolls left from right edge
+			# Calculate how far back in time this point is
+			var age = pitch_history.size() - 1 - i
 			
-			# Stop drawing if off screen
+			# Position: circle x minus distance based ONLY on age (NO scroll_offset!)
+			var x = circle_x - (age * 10.0)  # Each point 10 pixels left
+			
+			# Stop if off screen
 			if x < 0:
-				continue
+				break
 			
 			trail_points.append(Vector2(x, trail_y))
 		
 		# Draw the trail
 		if trail_points.size() > 1:
 			for i in range(trail_points.size() - 1):
-				var alpha = float(i) / trail_points.size()
+				var alpha = 1.0 - (float(i) / trail_points.size())  # Fade away from circle
 				var trail_color = Color(player_color.r, player_color.g, player_color.b, alpha * 0.5)
 				draw_line(trail_points[i], trail_points[i + 1], trail_color, 3.0)
 	
-	# Draw main pitch indicator (STATIONARY on right edge)
-	var circle_x = size.x - 30  # Fixed position on right
-	draw_circle(Vector2(circle_x, y_pos), 14.0, player_color)
+	# Draw main pitch indicator (on top)
+	draw_circle(Vector2(circle_x, y_pos), 8.0, player_color)  # Reduced from 14.0
 
 func draw_pitch_zones():
 	"""Draw colored zones showing perfect/good hit areas"""
