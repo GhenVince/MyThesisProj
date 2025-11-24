@@ -56,12 +56,16 @@ func _ready():
 	setup_audio()
 	setup_pitch_detection()
 	
-	# Connect pause menu signals
+	# Connect pause menu signals (only if not already connected)
 	if pause_menu:
-		pause_menu.continue_game.connect(_on_pause_continue)
-		pause_menu.retry_game.connect(_on_pause_retry)
-		pause_menu.open_options.connect(_on_pause_options)
-		pause_menu.exit_to_menu.connect(_on_pause_exit)
+		if not pause_menu.continue_game.is_connected(_on_pause_continue):
+			pause_menu.continue_game.connect(_on_pause_continue)
+		if not pause_menu.retry_game.is_connected(_on_pause_retry):
+			pause_menu.retry_game.connect(_on_pause_retry)
+		if not pause_menu.open_options.is_connected(_on_pause_options):
+			pause_menu.open_options.connect(_on_pause_options)
+		if not pause_menu.exit_to_menu.is_connected(_on_pause_exit):
+			pause_menu.exit_to_menu.connect(_on_pause_exit)
 	
 	pause_menu.hide()
 	countdown_label.hide()
@@ -569,22 +573,54 @@ func _on_options_closed():
 	# Show pause menu again (game stays paused)
 	pause_menu.show()
 	print("✓ Returned to pause menu (still paused)")
-		print("OptionsMenu.tscn not found!")
-		get_tree().paused = true
+	print("OptionsMenu.tscn not found!")
+	get_tree().paused = true
 
 func _on_pause_exit():
 	"""Exit to main menu"""
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func end_game():
+	"""End the game and go to results screen"""
 	is_playing = false
 	
-	SongDatabase.save_score(
-		song_data["title"],
-		GameManager.game_score,
-		GameManager.perfect_count,
-		GameManager.good_count,
-		GameManager.miss_count
-	)
+	var line = "=================================================="
+	print("\n" + line)
+	print("GAME ENDING")
+	print(line)
 	
+	# Print final stats
+	print("\n📊 Final Stats:")
+	print("   Song: " + str(song_data.get("title", "Unknown")))
+	print("   Score: " + str(GameManager.game_score))
+	print("   Perfect: " + str(GameManager.perfect_count))
+	print("   Good: " + str(GameManager.good_count))
+	print("   Miss: " + str(GameManager.miss_count))
+	
+	# Save score if SongDatabase has the function (optional)
+	if SongDatabase.has_method("save_score"):
+		SongDatabase.save_score(
+			song_data.get("title", "Unknown"),
+			GameManager.game_score,
+			GameManager.perfect_count,
+			GameManager.good_count,
+			GameManager.miss_count
+		)
+		print("✓ Score saved to SongDatabase")
+	else:
+		print("ℹ️ SongDatabase.save_score() not implemented (optional)")
+	
+	print(line)
+	print("Going to Results Screen...")
+	print(line + "\n")
+	
+	# Store song title temporarily in a global for ResultsScreen
+	# Use a metadata approach that works with locked scripts
+	get_tree().root.set_meta("last_song_title", song_data.get("title", "Unknown Song"))
+	get_tree().root.set_meta("last_song_score", GameManager.game_score)
+	get_tree().root.set_meta("last_song_perfect", GameManager.perfect_count)
+	get_tree().root.set_meta("last_song_good", GameManager.good_count)
+	get_tree().root.set_meta("last_song_miss", GameManager.miss_count)
+	
+	# Go to results screen
 	get_tree().change_scene_to_file("res://scenes/ResultsScreen.tscn")

@@ -67,10 +67,11 @@ func _process(_delta):
 func update_player_pitch(y_position: float = 0.0, note: String = ""):
 	"""Update player's current pitch with smoothing"""
 	if y_position > 0 and not note.is_empty():
-		# Smooth the position to reduce jitter
-		if player_pitch > 0:
+		# Apply smoothing if factor > 0, otherwise use direct assignment
+		if SMOOTHING_FACTOR > 0 and player_pitch > 0:
 			player_pitch = lerp(player_pitch, y_position, SMOOTHING_FACTOR)
 		else:
+			# No smoothing or first pitch - use directly
 			player_pitch = y_position
 		
 		player_note = note

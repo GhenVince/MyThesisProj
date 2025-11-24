@@ -1,118 +1,250 @@
+# ResultsScreen.gd
 extends Control
 
-@onready var total_score_label = $Panel/VBoxContainer/TotalScore
-@onready var perfect_label = $Panel/VBoxContainer/Stats/PerfectLabel
-@onready var good_label = $Panel/VBoxContainer/Stats/GoodLabel
-@onready var miss_label = $Panel/VBoxContainer/Stats/MissLabel
-@onready var accuracy_label = $Panel/VBoxContainer/AccuracyLabel
-@onready var recommendation_container = $Panel/VBoxContainer/RecommendationPanel/RecommendationList
-@onready var continue_button = $Panel/VBoxContainer/Buttons/ContinueButton
-@onready var replay_button = $Panel/VBoxContainer/Buttons/ReplayButton
-@onready var menu_button = $Panel/VBoxContainer/Buttons/MenuButton
-
-var spectral_analyzer: Node
+# Get references to UI elements
+@onready var song_title_label = $Panel/VBoxContainer/SongTitle
+@onready var score_value_label = $Panel/VBoxContainer/ScoreContainer/ScoreValue
+@onready var accuracy_value_label = $Panel/VBoxContainer/AccuracyContainer/AccuracyValue
+@onready var perfect_value_label = $Panel/VBoxContainer/StatsContainer/PerfectContainer/PerfectValue
+@onready var good_value_label = $Panel/VBoxContainer/StatsContainer/GoodContainer/GoodValue
+@onready var miss_value_label = $Panel/VBoxContainer/StatsContainer/MissContainer/MissValue
+@onready var rank_label = $Panel/VBoxContainer/RankLabel
+@onready var retry_button = $Panel/VBoxContainer/ButtonContainer/RetryButton
+@onready var menu_button = $Panel/VBoxContainer/ButtonContainer/MenuButton
+@onready var panel = $Panel
 
 func _ready():
-	display_results()
-	generate_recommendations()
+	var line = "=================================================="
+	print("\n" + line)
+	print("RESULTS SCREEN")
+	print(line)
 	
-	continue_button.pressed.connect(_on_continue_pressed)
-	replay_button.pressed.connect(_on_replay_pressed)
-	menu_button.pressed.connect(_on_menu_pressed)
+	# Display the results
+	display_results()
+	
+	# Save to leaderboard
+	save_to_leaderboard()
+	
+	# Connect buttons
+	if retry_button:
+		retry_button.pressed.connect(_on_retry_pressed)
+		print("✓ Retry button connected")
+	
+	if menu_button:
+		menu_button.pressed.connect(_on_menu_pressed)
+		print("✓ Menu button connected")
+	
+	# Animate in
+	animate_results()
+	
+	print(line + "\n")
 
 func display_results():
-	total_score_label.text = "Total Score: %d" % GameManager.game_score
-	perfect_label.text = "Perfect: %d" % GameManager.perfect_count
-	good_label.text = "Good: %d" % GameManager.good_count
-	miss_label.text = "Miss: %d" % GameManager.miss_count
+	"""Display all game results"""
+	print("\n📊 Displaying Results:")
 	
-	var total_notes = GameManager.perfect_count + GameManager.good_count + GameManager.miss_count
+	# Song title - read from scene tree metadata
+	var song_title = "Song Complete!"
+	if get_tree().root.has_meta("last_song_title"):
+		song_title = get_tree().root.get_meta("last_song_title")
+	
+	# Get stored values (in case GameManager was reset)
+	var score = GameManager.game_score
+	var perfect = GameManager.perfect_count
+	var good = GameManager.good_count
+	var miss = GameManager.miss_count
+	
+	# If GameManager is empty, try metadata fallback
+	if score == 0 and get_tree().root.has_meta("last_song_score"):
+		score = get_tree().root.get_meta("last_song_score")
+		perfect = get_tree().root.get_meta("last_song_perfect")
+		good = get_tree().root.get_meta("last_song_good")
+		miss = get_tree().root.get_meta("last_song_miss")
+	
+	if song_title_label:
+		song_title_label.text = song_title
+		print("   Song: " + song_title)
+	
+	# Score
+	if score_value_label:
+		score_value_label.text = str(score)
+		print("   Score: " + str(score))
+	
+	# Calculate accuracy
+	var total_notes = perfect + good + miss
 	var accuracy = 0.0
 	if total_notes > 0:
-		accuracy = (GameManager.perfect_count + GameManager.good_count * 0.5) / float(total_notes) * 100.0
+		accuracy = (perfect + good * 0.5) / float(total_notes) * 100.0
 	
-	accuracy_label.text = "Accuracy: %.1f%%" % accuracy
+	if accuracy_value_label:
+		accuracy_value_label.text = str(int(accuracy)) + "%"
+		print("   Accuracy: " + str(int(accuracy)) + "%")
+	
+	# Stats
+	if perfect_value_label:
+		perfect_value_label.text = str(perfect)
+		print("   Perfect: " + str(perfect))
+	
+	if good_value_label:
+		good_value_label.text = str(good)
+		print("   Good: " + str(good))
+	
+	if miss_value_label:
+		miss_value_label.text = str(miss)
+		print("   Miss: " + str(miss))
+	
+	# Rank
+	var rank = calculate_rank(accuracy)
+	if rank_label:
+		rank_label.text = rank
+		set_rank_color(rank)
+		print("   Rank: " + rank)
 
-func generate_recommendations():
-	spectral_analyzer = load("res://scripts/SpectralAnalyzer.gd").new()
-	add_child(spectral_analyzer)
+func calculate_rank(accuracy: float) -> String:
+	"""Calculate rank based on accuracy"""
+	if accuracy >= 95:
+		return "S"
+	elif accuracy >= 90:
+		return "A"
+	elif accuracy >= 80:
+		return "B"
+	elif accuracy >= 70:
+		return "C"
+	elif accuracy >= 60:
+		return "D"
+	else:
+		return "F"
+
+func set_rank_color(rank: String):
+	"""Set rank label color based on rank"""
+	if not rank_label:
+		return
 	
-	# Analyze player's timbre
-	var player_timbre = calculate_player_timbre()
+	match rank:
+		"S":
+			rank_label.modulate = Color(1.0, 0.84, 0.0)  # Gold
+		"A":
+			rank_label.modulate = Color(0.0, 1.0, 0.0)   # Green
+		"B":
+			rank_label.modulate = Color(0.0, 0.8, 1.0)   # Cyan
+		"C":
+			rank_label.modulate = Color(1.0, 1.0, 0.0)   # Yellow
+		"D":
+			rank_label.modulate = Color(1.0, 0.5, 0.0)   # Orange
+		"F":
+			rank_label.modulate = Color(1.0, 0.0, 0.0)   # Red
+
+func save_to_leaderboard():
+	"""Save score to leaderboard"""
+	print("\n💾 Saving to Leaderboard:")
 	
-	# Compare with all songs
-	var recommendations = []
-	for song in SongDatabase.songs:
-		if song == GameManager.current_song:
-			continue
+	# Get song title from metadata
+	var song_title = "Unknown Song"
+	if get_tree().root.has_meta("last_song_title"):
+		song_title = get_tree().root.get_meta("last_song_title")
+	
+	# Get player name (default to "Player")
+	var player_name = "Player"
+	
+	# Get stats (from metadata if GameManager reset)
+	var score = GameManager.game_score
+	var perfect = GameManager.perfect_count
+	var good = GameManager.good_count
+	var miss = GameManager.miss_count
+	
+	if score == 0 and get_tree().root.has_meta("last_song_score"):
+		score = get_tree().root.get_meta("last_song_score")
+		perfect = get_tree().root.get_meta("last_song_perfect")
+		good = get_tree().root.get_meta("last_song_good")
+		miss = get_tree().root.get_meta("last_song_miss")
+	
+	# Calculate accuracy
+	var total_notes = perfect + good + miss
+	var accuracy = 0.0
+	if total_notes > 0:
+		accuracy = (perfect + good * 0.5) / float(total_notes) * 100.0
+	
+	# Get rank
+	var rank = calculate_rank(accuracy)
+	
+	# Print stats
+	print("   Song: " + song_title)
+	print("   Score: " + str(score))
+	print("   Accuracy: " + str(int(accuracy)) + "%")
+	print("   Rank: " + rank)
+	
+	# Save to LeaderboardManager
+	if has_node("/root/LeaderboardManager"):
+		var leaderboard = get_node("/root/LeaderboardManager")
 		
-		var song_timbre = get_song_timbre(song)
-		if song_timbre.is_empty():
-			continue
-		
-		var similarity = spectral_analyzer.compare_timbre(player_timbre, song_timbre)
-		recommendations.append({
-			"song": song,
-			"similarity": similarity
-		})
-	
-	# Sort by similarity
-	recommendations.sort_custom(func(a, b): return a["similarity"] > b["similarity"])
-	
-	# Display top 3 recommendations
-	for i in range(min(3, recommendations.size())):
-		var rec = recommendations[i]
-		var label = Label.new()
-		label.text = "%s - %s (%.0f%% match)" % [
-			rec["song"]["title"],
-			rec["song"]["artist"],
-			rec["similarity"] * 100
-		]
-		recommendation_container.add_child(label)
+		if leaderboard.has_method("add_score"):
+			# Create score entry dictionary matching LeaderboardManager format
+			var score_entry = {
+				"song": song_title,
+				"artist": "",  # Could add this later
+				"score": score,
+				"accuracy": accuracy,
+				"perfect": perfect,
+				"good": good,
+				"miss": miss,
+				"rank": rank,
+				"date": Time.get_datetime_string_from_system()
+			}
+			
+			# Call add_score with the dictionary
+			leaderboard.add_score(score_entry)
+			print("   ✓ Score saved to leaderboard!")
+		else:
+			print("   ⚠️ LeaderboardManager.add_score() not found")
+	else:
+		print("   ℹ️ LeaderboardManager not found")
 
-func calculate_player_timbre() -> Dictionary:
-	# Simplified timbre calculation from player's pitch history
-	if GameManager.player_timbre_data.is_empty():
-		return {"average_centroid": 2000.0, "centroid_variance": 1000.0}
+func animate_results():
+	"""Animate the results appearing"""
+	if not panel:
+		return
 	
-	# This is a placeholder - in production, you'd calculate actual spectral centroid
-	var avg_freq = 0.0
-	var count = 0
+	panel.modulate.a = 0.0
+	panel.scale = Vector2(0.8, 0.8)
 	
-	for segment in GameManager.player_timbre_data:
-		for note_data in segment:
-			if note_data.has("frequency"):
-				avg_freq += note_data["frequency"]
-				count += 1
+	var tween = create_tween()
+	tween.set_parallel(true)
+	tween.tween_property(panel, "modulate:a", 1.0, 0.5)
+	tween.tween_property(panel, "scale", Vector2(1.0, 1.0), 0.5).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	
-	if count > 0:
-		avg_freq /= count
-	
-	return {
-		"average_centroid": avg_freq * 2.5,  # Rough approximation
-		"centroid_variance": 1000.0
-	}
+	print("✓ Results animated in")
 
-func get_song_timbre(song: Dictionary) -> Dictionary:
-	# Load pre-analyzed timbre data or calculate on-the-fly
-	var timbre_path = SongDatabase.SONGS_DIR + song["folder"] + "/timbre.json"
+func _on_retry_pressed():
+	"""Retry the same song"""
+	print("\n🔄 Retrying song...")
 	
-	if FileAccess.file_exists(timbre_path):
-		var file = FileAccess.open(timbre_path, FileAccess.READ)
-		var json = JSON.new()
-		json.parse(file.get_as_text())
-		file.close()
-		return json.data
+	# Reset GameManager if it has reset_game method
+	if GameManager.has_method("reset_game"):
+		GameManager.reset_game()
+	else:
+		# Manually reset if method doesn't exist
+		GameManager.game_score = 0
+		GameManager.perfect_count = 0
+		GameManager.good_count = 0
+		GameManager.miss_count = 0
 	
-	# Default timbre if not pre-analyzed
-	return {"average_centroid": 2500.0, "centroid_variance": 1200.0}
-
-func _on_continue_pressed():
-	get_tree().change_scene_to_file("res://scenes/SongSelection.tscn")
-
-func _on_replay_pressed():
-	GameManager.reset_game_stats()
+	# Metadata persists, so song info will still be available
+	# Go back to gameplay
 	get_tree().change_scene_to_file("res://scenes/Gameplay.tscn")
 
 func _on_menu_pressed():
+	"""Return to main menu"""
+	print("\n🏠 Returning to main menu...")
+	
+	# Reset GameManager if it has reset_game method
+	if GameManager.has_method("reset_game"):
+		GameManager.reset_game()
+	else:
+		# Manually reset if method doesn't exist
+		GameManager.game_score = 0
+		GameManager.perfect_count = 0
+		GameManager.good_count = 0
+		GameManager.miss_count = 0
+	
+	# Go to main menu
 	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
