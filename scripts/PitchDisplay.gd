@@ -39,7 +39,7 @@ var scroll_speed: float = 100.0  # Pixels per second
 var pitch_history: Array = []
 var reference_history: Array = []  # NEW: History for reference pitch tail
 const MAX_HISTORY_SIZE = 40  # Increased from 20 for longer tail
-const SMOOTHING_FACTOR = 0.0  # No smoothing for instant response (was 0.05)
+const SMOOTHING_FACTOR = 0.15  # Small smoothing to reduce jitter (was 0.0)
 
 # UI nodes (if you want to add labels)
 var player_note_label: Label

@@ -46,6 +46,9 @@ var settings: Dictionary = {
 }
 
 func _ready():
+	# Set to process even when paused (so it works in gameplay pause menu)
+	process_mode = Node.PROCESS_MODE_ALWAYS
+	
 	# Make it a popup
 	setup_as_popup()
 	
@@ -169,8 +172,14 @@ func _on_auto_pause_toggled(toggled: bool):
 # === BUTTON ACTIONS ===
 
 func _on_close_pressed():
-	"""Close and return to main menu"""
-	get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
+	"""Close options menu and emit closed signal"""
+	# Emit signal for parent to handle (could be MainMenu or Gameplay)
+	closed.emit()
+	
+	# If not connected (opened from main menu), go back to main menu
+	# Check if the signal has any connections
+	if closed.get_connections().is_empty():
+		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 
 func _on_reset_pressed():
 	"""Reset to default settings"""

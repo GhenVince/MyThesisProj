@@ -41,7 +41,9 @@ const NOTE_POSITIONS = {
 }
 
 func _ready():
-	if GameManager.current_song.is_empty():
+	# Check if song was selected
+	# Use 'in' operator to check if property exists
+	if not "current_song" in GameManager or GameManager.get("current_song").is_empty():
 		push_error("No song selected!")
 		get_tree().change_scene_to_file("res://scenes/SongSelection.tscn")
 		return
@@ -113,20 +115,29 @@ func setup_vocal_analysis_bus():
 		vocal_bus_idx = AudioServer.bus_count
 		AudioServer.add_bus(vocal_bus_idx)
 		AudioServer.set_bus_name(vocal_bus_idx, "VocalAnalysis")
+		print("✓ Created VocalAnalysis bus at index: " + str(vocal_bus_idx))
 	
+	# Clear existing effects
 	for i in range(AudioServer.get_bus_effect_count(vocal_bus_idx) - 1, -1, -1):
 		AudioServer.remove_bus_effect(vocal_bus_idx, i)
 	
+	# Amplify for better detection
 	var amp = AudioEffectAmplify.new()
 	amp.volume_db = 12.0
 	AudioServer.add_bus_effect(vocal_bus_idx, amp)
+	print("✓ Added amplifier (+12 dB)")
 	
+	# Capture for pitch detection
 	vocal_effect_capture = AudioEffectCapture.new()
-	vocal_effect_capture.buffer_length = 0.1
+	vocal_effect_capture.buffer_length = 0.1  # Need longer buffer for vocals (was 0.03)
 	AudioServer.add_bus_effect(vocal_bus_idx, vocal_effect_capture)
+	print("✓ Added AudioEffectCapture (0.1s buffer)")
 	
-	AudioServer.set_bus_mute(vocal_bus_idx, true)
-	print("✓ Vocal analysis bus created")
+	# IMPORTANT: Connect to Master but mute - this allows processing!
+	AudioServer.set_bus_send(vocal_bus_idx, "Master")
+	AudioServer.set_bus_mute(vocal_bus_idx, true)  # Mute so we don't hear it
+	print("✓ VocalAnalysis → Master (muted for silence)")
+	print("✓ Vocal analysis bus ready")
 
 func setup_player_monitoring():
 	"""Setup player voice monitoring with reverb feedback"""
@@ -247,6 +258,11 @@ func start_game():
 	audio_player.play()
 	if reference_analyzer_active:
 		vocal_player.play()
+		print("🎵 Vocal player started for reference detection")
+		print("   Vocal player is_playing: " + str(vocal_player.is_playing()))
+		print("   Vocal player stream: " + str(vocal_player.stream))
+	else:
+		print("⚠️ Reference analyzer NOT active (no vocals.ogg?)")
 
 func _process(delta):
 	if not is_playing or is_paused:
@@ -284,6 +300,7 @@ func _process(delta):
 
 func detect_reference_pitch():
 	if not vocal_effect_capture:
+		print("⚠️ No vocal_effect_capture!")
 		return
 	
 	if vocal_effect_capture.can_get_buffer(2048):
@@ -295,6 +312,13 @@ func detect_reference_pitch():
 			mono_buffer[i] = (frames[i].x + frames[i].y) / 2.0
 		
 		var frequency = analyze_reference_frequency(mono_buffer)
+		
+		# DEBUG: Always print what we're detecting
+		if int(current_time * 2) % 2 == 0:  # Print every 0.5 seconds
+			if frequency > 0:
+				print("🔵 Reference detected: %.1f Hz" % frequency)
+			else:
+				print("⚪ No reference pitch detected (frequency = 0)")
 		
 		if frequency > 0:
 			reference_pitch_smoothing.append(frequency)
@@ -312,6 +336,9 @@ func detect_reference_pitch():
 				var note_data = pitch_detector.get_note_with_cents(smoothed_freq)
 				var y_position = get_position_from_frequency(smoothed_freq)
 				
+				# DEBUG: Print when updating display
+				print("   ➜ Updating display: Y=%.1f" % y_position)
+				
 				pitch_display.update_reference_pitch(y_position, current_time)
 				
 				reference_pitches.append({
@@ -319,6 +346,10 @@ func detect_reference_pitch():
 					"note": note_data["note"],
 					"frequency": smoothed_freq
 				})
+	else:
+		# DEBUG: Print if buffer not available
+		if int(current_time * 2) % 10 == 0:  # Print occasionally
+			print("⚠️ Vocal buffer not available")
 
 func analyze_reference_frequency(samples: PackedFloat32Array) -> float:
 	var buffer_size = samples.size()
@@ -525,8 +556,8 @@ func _on_pause_options():
 	"""Open options from pause menu"""
 	print("🎮 Opening options menu...")
 	
-	# Keep game paused
-	# (pause menu already set paused = true)
+	# Make sure game stays paused
+	get_tree().paused = true
 	
 	# Hide pause menu
 	pause_menu.hide()
@@ -558,13 +589,16 @@ func _on_pause_options():
 			pause_menu.show()
 			return
 	
-	# Show options menu
+	# Show options menu (game remains paused)
 	options_menu_instance.show()
 	print("✓ Options menu shown (game still paused)")
 
 func _on_options_closed():
 	"""When options menu closes, show pause menu again"""
 	print("🎮 Options closed, returning to pause menu...")
+	
+	# Ensure game stays paused
+	get_tree().paused = true
 	
 	# Hide options menu
 	if options_menu_instance:
@@ -573,8 +607,6 @@ func _on_options_closed():
 	# Show pause menu again (game stays paused)
 	pause_menu.show()
 	print("✓ Returned to pause menu (still paused)")
-	print("OptionsMenu.tscn not found!")
-	get_tree().paused = true
 
 func _on_pause_exit():
 	"""Exit to main menu"""
