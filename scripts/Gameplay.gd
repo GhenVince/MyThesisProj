@@ -105,7 +105,9 @@ func setup_audio():
 		vocal_player.stream = load(vocal_path)
 		vocal_player.bus = "VocalAnalysis"
 		reference_analyzer_active = true
-		print("✓ Reference vocals loaded")
+		print("✓ Vocals loaded: " + vocal_path)
+	else:
+		print("⚠️ No vocals.ogg found")
 	
 	setup_player_monitoring()
 
@@ -115,7 +117,9 @@ func setup_vocal_analysis_bus():
 		vocal_bus_idx = AudioServer.bus_count
 		AudioServer.add_bus(vocal_bus_idx)
 		AudioServer.set_bus_name(vocal_bus_idx, "VocalAnalysis")
-		print("✓ Created VocalAnalysis bus at index: " + str(vocal_bus_idx))
+		print("✓ Created VocalAnalysis bus at index: %d" % vocal_bus_idx)
+	else:
+		print("✓ VocalAnalysis bus exists at index: %d" % vocal_bus_idx)
 	
 	# Clear existing effects
 	for i in range(AudioServer.get_bus_effect_count(vocal_bus_idx) - 1, -1, -1):
@@ -125,19 +129,21 @@ func setup_vocal_analysis_bus():
 	var amp = AudioEffectAmplify.new()
 	amp.volume_db = 12.0
 	AudioServer.add_bus_effect(vocal_bus_idx, amp)
-	print("✓ Added amplifier (+12 dB)")
+	print("✓ Added amplifier")
 	
 	# Capture for pitch detection
 	vocal_effect_capture = AudioEffectCapture.new()
-	vocal_effect_capture.buffer_length = 0.1  # Need longer buffer for vocals (was 0.03)
+	vocal_effect_capture.buffer_length = 0.1  # Back to 0.1s - 0.03s might be too small for vocals
 	AudioServer.add_bus_effect(vocal_bus_idx, vocal_effect_capture)
-	print("✓ Added AudioEffectCapture (0.1s buffer)")
+	print("✓ Added AudioEffectCapture (buffer: 0.1s)")
 	
-	# IMPORTANT: Connect to Master but mute - this allows processing!
+	# Connect to Master but mute
 	AudioServer.set_bus_send(vocal_bus_idx, "Master")
-	AudioServer.set_bus_mute(vocal_bus_idx, true)  # Mute so we don't hear it
-	print("✓ VocalAnalysis → Master (muted for silence)")
-	print("✓ Vocal analysis bus ready")
+	AudioServer.set_bus_mute(vocal_bus_idx, true)
+	print("✓ VocalAnalysis connected to Master (muted)")
+	
+	# Verify bus is enabled
+	print("✓ Bus solo: %s, mute: %s" % [AudioServer.is_bus_solo(vocal_bus_idx), AudioServer.is_bus_mute(vocal_bus_idx)])
 
 func setup_player_monitoring():
 	"""Setup player voice monitoring with reverb feedback"""
@@ -258,11 +264,7 @@ func start_game():
 	audio_player.play()
 	if reference_analyzer_active:
 		vocal_player.play()
-		print("🎵 Vocal player started for reference detection")
-		print("   Vocal player is_playing: " + str(vocal_player.is_playing()))
-		print("   Vocal player stream: " + str(vocal_player.stream))
-	else:
-		print("⚠️ Reference analyzer NOT active (no vocals.ogg?)")
+		print("✓ Vocal player started")
 
 func _process(delta):
 	if not is_playing or is_paused:
@@ -279,12 +281,14 @@ func _process(delta):
 		update_pitch_display(note_data)
 		player_pitch_history.append(note_data)
 		
-		if player_pitch_history.size() % 20 == 0:
+		# Reduce timbre analysis frequency - not critical
+		if player_pitch_history.size() % 60 == 0:
 			analyze_player_timbre()
 	
 	# Always scroll the display
 	pitch_display.scroll_display(delta)
 	
+	# Detect reference every frame for smooth movement
 	if reference_analyzer_active:
 		detect_reference_pitch()
 	
@@ -300,11 +304,22 @@ func _process(delta):
 
 func detect_reference_pitch():
 	if not vocal_effect_capture:
-		print("⚠️ No vocal_effect_capture!")
+		print("❌ vocal_effect_capture is null!")
 		return
 	
-	if vocal_effect_capture.can_get_buffer(2048):
+	# Check if we can get buffer
+	var can_get = vocal_effect_capture.can_get_buffer(2048)
+	
+	# Print buffer status occasionally
+	if int(current_time * 10) % 30 == 0:  # Every 3 seconds
+		print("Buffer status: can_get=%s, length_available=%d" % [can_get, vocal_effect_capture.get_frames_available()])
+	
+	if can_get:
 		var frames = vocal_effect_capture.get_buffer(2048)
+		
+		if frames.size() == 0:
+			print("⚠️ Buffer empty (size 0)")
+			return
 		
 		var mono_buffer = PackedFloat32Array()
 		mono_buffer.resize(frames.size())
@@ -313,15 +328,9 @@ func detect_reference_pitch():
 		
 		var frequency = analyze_reference_frequency(mono_buffer)
 		
-		# DEBUG: Always print what we're detecting
-		if int(current_time * 2) % 2 == 0:  # Print every 0.5 seconds
-			if frequency > 0:
-				print("🔵 Reference detected: %.1f Hz" % frequency)
-			else:
-				print("⚪ No reference pitch detected (frequency = 0)")
-		
 		if frequency > 0:
 			reference_pitch_smoothing.append(frequency)
+			# Keep at 5 samples - best balance of smooth and responsive
 			if reference_pitch_smoothing.size() > 5:
 				reference_pitch_smoothing.pop_front()
 			
@@ -330,14 +339,15 @@ func detect_reference_pitch():
 				smoothed_freq += f
 			smoothed_freq /= reference_pitch_smoothing.size()
 			
-			if abs(smoothed_freq - last_reference_pitch) < 50.0 or last_reference_pitch == 0.0:
+			if abs(smoothed_freq - last_reference_pitch) < 80.0 or last_reference_pitch == 0.0:
 				last_reference_pitch = smoothed_freq
 				
 				var note_data = pitch_detector.get_note_with_cents(smoothed_freq)
 				var y_position = get_position_from_frequency(smoothed_freq)
 				
-				# DEBUG: Print when updating display
-				print("   ➜ Updating display: Y=%.1f" % y_position)
+				# TEMP DEBUG: Print once every 2 seconds to verify detection
+				if int(current_time) % 2 == 0 and int(current_time * 10) % 10 == 0:
+					print("REF: %.1f Hz, Y: %.1f" % [smoothed_freq, y_position])
 				
 				pitch_display.update_reference_pitch(y_position, current_time)
 				
@@ -346,10 +356,10 @@ func detect_reference_pitch():
 					"note": note_data["note"],
 					"frequency": smoothed_freq
 				})
-	else:
-		# DEBUG: Print if buffer not available
-		if int(current_time * 2) % 10 == 0:  # Print occasionally
-			print("⚠️ Vocal buffer not available")
+		else:
+			# Print when no frequency detected
+			if int(current_time * 10) % 30 == 0:
+				print("⚪ No frequency detected from vocals")
 
 func analyze_reference_frequency(samples: PackedFloat32Array) -> float:
 	var buffer_size = samples.size()
